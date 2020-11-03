@@ -30,6 +30,3 @@ import select
 # print (data)
 # s.close()
 
-data = b'200 OK\r\nDate: Tue, 03 Nov 2020 12:57:17 AM GMT\r\nContent-Length: 18\r\n\r\n\x00\x8a\xbb\x1a%\x12\x11\xdb\xb6\x87\xa8\xf5>Es\x8f\xbd\x97'
-headers = data[:(len(data) - 18)]
-print(headers)
