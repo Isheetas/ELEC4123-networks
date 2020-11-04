@@ -24,34 +24,9 @@ def main():
 
 
     '''
-    2. modify struct
+    2. Alter payload struct
     '''
-
-
     
-    
-
-
-
-
-
-
-    # struct student_data {
-    #     char student_name[5];
-    #     char mark_task1; // Max mark – 25
-    #     char mark_task2; // Max mark - 15
-    #     char mark_task3; // Max mark - 50
-    #     char mark_task4; // Max mark - 10
-    #     char mark_total; // Max mark - 100
-    # }
-    # struct database {
-    #     char n_entries;
-    #     student_data sample[n_entries];
-    # }
-    
-
-
-
     ''' 
     3. convert database structure to json serialisable object
     '''
@@ -60,18 +35,18 @@ def main():
     '''
     4. encrypt with rsa
     '''
-    encrypted_payload = encrypt_rsa(json_payload, n, e)
-    print('encrypted payload')
+    plaintext = "Hello"
+    print(plaintext)
+    encrypted_payload = encrypt_rsa(plaintext, n, e)
     print(encrypted_payload)
-    
-    # sanity check - decrypt payload
-    decrypted_payload = pow(encrypted_payload, int(d), int(n))
-    print('decrypted payload')
+    decrypted_payload = decrypt_rsa(encrypted_payload, n, d)
     print(decrypted_payload)
-    decrypted_payload_bytes = decrypted_payload.to_bytes((decrypted_payload.bit_length() + 7) // 8, 'big')
-    print(decrypted_payload_bytes)
+
     '''
     5. encode to hamming
+    '''
+
+    '''
     6. construct response and sent to user
     '''
 
@@ -79,20 +54,40 @@ def main():
 
 
 '''
-TBD: encrypt with rsa  
+Encrypt with RSA 
+Input plaintext (String e.g 'Hello') - payload to encrypt as a text string, n(String), e(String)
+Output cipher_bytes (String e.g  b'\xa9z\xb7\xf3\')
 '''
-def encrypt_rsa(payload, N, e):
-    cipher = bytes(payload, 'utf-8')
-    print('cipher:')
-    print(cipher)
-    int_cipher = int.from_bytes(cipher, byteorder='big')
-    print('integer payload')
-    print(int_cipher)
-    # back to string
-    # print('back to bytes')
-    # cipher_to_bytes = int_cipher.to_bytes((int_cipher.bit_length() + 7) // 8, 'big')
-    # print(cipher_to_bytes)
-    return pow(int_cipher, int(e), int(N))
+def encrypt_rsa(plaintext, n, e):
+    plaintext_int = int.from_bytes(bytes(plaintext, 'utf-8'), byteorder='big') # convert plaintext to integer form
+    cipher_int = pow(plaintext_int, int(e), int(n))
+    cipher_bytes = cipher_int.to_bytes((cipher_int.bit_length() + 7) // 8, 'big')
+    # cipher = str(cipher_bytes, 'utf-8')
+    return cipher_bytes
+
+
+'''
+Decrypt with RSA
+Input cipher (Byte String e.g. b'\xa9z\xb7\xf3\') - payload to decrypt as a text string, n(String), d(String)
+Output plaintext (String e.g 'Hello')
+'''
+def decrypt_rsa(cipher_bytes, n, d):
+    cipher_int = int.from_bytes(cipher_bytes, byteorder='big') # convert cipher to integer form
+    plaintext_int = pow(cipher_int, int(d), int(n))
+    plaintext_bytes = plaintext_int.to_bytes((plaintext_int.bit_length() + 7) // 8, 'big')
+    plaintext = str(plaintext_bytes, 'utf-8')
+    return plaintext
+
+
+
+
+'''
+TBD: decode with hamming
+'''
+def hamming_decode(byte_string):
+    return 0
+
+
 
 '''
 TBD: encode with hamming
