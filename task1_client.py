@@ -17,6 +17,7 @@ def main():
     except socket.error as err: 
         print ("socket creation failed with error %s" %(err))
     
+    
     s.connect((HOST, PORT))
     s.send (request_bytes)
     
@@ -24,19 +25,20 @@ def main():
     if ready[0]:
         response = s.recv(64000)
     #print(bytearray(data)) 
- 
+    
+    print(b'received msg: ' + response)
     response_tokens = response.split(b'\r\n\r\n')
     response_header = response_tokens[0] + b'\r\n\r\n'
     print(b'response header:' + response_header)
     payload = response_tokens[1]
-    print(b'payload:' + payload)
+    print(payload)
  
     
  
     # extract output content - comes after \r\n\r\n
  
     # 2. Resolve hamming code on payload
-    decoded_payload = hamming_decode(payload)
+    decoded_payload = hamming_decode(payload)       #
 
 
     print('decoded_payload playload')
@@ -69,17 +71,37 @@ def main():
 
     for i in out:
         print(chr(i), end = '')                         #convert int to ascii
-
-
-
-
-
-
  
     s.close()
  
 def hamming_decode(data):
-    databits = [access_bit(data,i) for i in range(len(data)*8)]
+    print('data')
+    print(data)
+
+    con = ''
+    databits = []
+    for i in data:
+        integer = int(i)
+        binary = bin(integer)
+        binary = binary[2:]
+        if len(binary) < 8:
+            pad = 8 - len(binary)
+            zeros = ''
+            for i in range(pad):
+                zeros = zeros+'0'
+            binary = zeros+binary
+        databits.append(binary) 
+        con = con + binary
+    print ('databits')
+    print (databits)
+    print('con')
+    print (con)
+        #print(integ)
+        #print(binar)
+
+
+    
+
     
     i=0
     alldata = []
@@ -92,14 +114,16 @@ def hamming_decode(data):
     # print(alldata)
     databyte = []
     i=0
+
+    #print(databyte)
  
     while (i<len(alldata)-1):
         if (i%2==0):
             buff = alldata[i]+alldata[i+1]
             databyte.append(buff)
         i=i+1
-    print('databyte')
-    print ((databyte))
+    #print('databyte')
+    #print ((databyte))
     
     i=0
     listToStr = []
@@ -119,25 +143,26 @@ def hamming_decode(data):
 def hamming (binInput):
     #binInput = [1,0,1,1,0,1,0]
     output = binInput
+   
     p1 = [int(binInput[4]), int(binInput[2]), int(binInput[0]), int(binInput[6])]
     p2 = [int(binInput[4]), int(binInput[1]), int(binInput[0]), int(binInput[5])]
     p4 = [int(binInput[2]), int(binInput[1]), int(binInput[0]), int(binInput[3])]
     parity = [sum(p1) % 2, sum(p2) % 2, sum(p4) % 2]
     #print(parity)
     # if even parity, flip errored bit
-    if parity[0]  == 0 and parity[1] and parity[2] == 0:
+    if parity[0] and parity[1] and parity[2]:
         output[0] = int(not (binInput[0]))
-    elif parity[0] == 0 and parity[1] == 0:
+    elif parity[0] and parity[1]:
         output[4] = int(not(binInput[4]))
-    elif parity[0] == 0 and parity[2] == 0:
+    elif parity[0] and parity[2]:
         output[2] = int(not (binInput[2]))
-    elif parity[1] == 0 and parity[2] == 0:
+    elif parity[1] and parity[2]:
         output[1] = int(not (binInput[1]))
-    elif parity[0] == 0:
+    elif parity[0]:
         output[6] = int(not (binInput[6]))
-    elif parity[1] == 0:
+    elif parity[1]:
         output[5] = int(not(binInput[5]))
-    elif parity[2] == 0:
+    elif parity[2]:
         output[3] = int(not(binInput[3]))
  
     #print(output)
@@ -147,18 +172,19 @@ def hamming (binInput):
 #print(output)
     return output
  
-def access_bit(data, num):
+def access_bit(data, num):                  #bytes into binary (string)
     base = int(num // 8)
     shift = int(num % 8)
+ 
     return (data[base] & (1<<shift)) >> shift
 
 def int_to_Bytes(integer):
     
-    print('int to sting of 0s and 1s')
-    print(bin(integer))
+    #print('int to sting of 0s and 1s')
+    #print(bin(integer))
     binary = bin(integer)       #return binary of integers in string format 
     binary = binary[2:]         #chop off the first two element (0b)
-    print(binary)
+    #print(binary)
 
     list_of_bytes = []          #will contain whole binary into list of 8bits (string)
     i = 0
