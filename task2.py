@@ -2,6 +2,7 @@ import socket
 import select
 import json
 import struct
+
 def main():
     # these values will be recieved from client
     n = '252837207378338387332619197259204540353'
@@ -35,12 +36,65 @@ def main():
     '''
     4. encrypt with rsa
     '''
-    plaintext = "Hello"
+    plaintext = b'\x03Marie\x0c\x06#\x038Alexa\x11\t*\x06JDavid\t\t\x1c\x064'
+
+
+    n_entries = plaintext[0]
+    len_student_bytes = 10 # bytes taken up by each students information
+    n = 0
+    while n < n_entries:
+        start = n*10 + 1
+        # print(response[i]) 
+        # first byte is number of students
+        name = str(plaintext[start:(start + 4)], 'utf-8')
+        t1 = plaintext[start+5]
+        t2 = plaintext[start+6]
+        t3 = plaintext[start+7]
+        t4 = plaintext[start+8]
+        total = plaintext[start+9]
+        print('name:' + name)
+        print('t1: ',  t1)
+        print('t2: ', t2)
+        print('t3: ', t3)
+        print('t4: ', t4)
+        print('total: ', total)
+        # next five bytes form name
+
+
+        n += 1
+
+
+
+
     print(plaintext)
     encrypted_payload = encrypt_rsa(plaintext, n, e)
     print(encrypted_payload)
     decrypted_payload = decrypt_rsa(encrypted_payload, n, d)
     print(decrypted_payload)
+
+    # n_entries = decrypted_payload[0]
+    # len_student_bytes = 10 # bytes taken up by each students information
+    # n = 0
+    # while n < n_entries:
+    #     start = n*10 + 1
+    #     # print(response[i]) 
+    #     # first byte is number of students
+    #     name = str(plaintext[start:(start + 4)], 'utf-8')
+    #     t1 = decrypted_payload[start+5]
+    #     t2 = decrypted_payload[start+6]
+    #     t3 = decrypted_payload[start+7]
+    #     t4 = decrypted_payload[start+8]
+    #     total = decrypted_payload[start+9]
+    #     print('name:' + name)
+    #     print('t1: ',  t1)
+    #     print('t2: ', t2)
+    #     print('t3: ', t3)
+    #     print('t4: ', t4)
+    #     print('total: ', total)
+        # next five bytes form name
+
+
+    #    n += 1
 
     '''
     5. encode to hamming
@@ -58,8 +112,8 @@ Encrypt with RSA
 Input plaintext (String e.g 'Hello') - payload to encrypt as a text string, n(String), e(String)
 Output cipher_bytes (String e.g  b'\xa9z\xb7\xf3\')
 '''
-def encrypt_rsa(plaintext, n, e):
-    plaintext_int = int.from_bytes(bytes(plaintext, 'utf-8'), byteorder='big') # convert plaintext to integer form
+def encrypt_rsa(plaintext_bytes, n, e):
+    plaintext_int = int.from_bytes(plaintext_bytes, byteorder='big') # convert plaintext to integer form
     cipher_int = pow(plaintext_int, int(e), int(n))
     cipher_bytes = cipher_int.to_bytes((cipher_int.bit_length() + 7) // 8, 'big')
     # cipher = str(cipher_bytes, 'utf-8')
@@ -75,8 +129,7 @@ def decrypt_rsa(cipher_bytes, n, d):
     cipher_int = int.from_bytes(cipher_bytes, byteorder='big') # convert cipher to integer form
     plaintext_int = pow(cipher_int, int(d), int(n))
     plaintext_bytes = plaintext_int.to_bytes((plaintext_int.bit_length() + 7) // 8, 'big')
-    plaintext = str(plaintext_bytes, 'utf-8')
-    return plaintext
+    return plaintext_bytes
 
 
 
