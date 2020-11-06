@@ -68,7 +68,7 @@ def main():
     out = []
     for i in decoded_bytes:
         out.append(int(i, base=2))                      #converts string of 8bit (1s 0s) into ints of range(0-255)
-        print('int char: ', int(i, base=2))
+        #print('int char: ', int(i, base=2))
     print(decoded_bytes)
 
     print('Ascii: ')
