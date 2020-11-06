@@ -9,9 +9,9 @@ def main():
     HOST = '149.171.36.192'
     PORT = 12274
     content = '252837207378338387332619197259204540353,65537'
- 
+    host = '149.171.36.192' 
     # HTTP request headers
-    request = 'GET / HTTP/1.1\r\nHost: ' + HOST + '\r\nContent-Length: ' + str(len(content)) + '\r\n\r\n' + content
+    request = 'GET / HTTP/1.1\r\nHost: ' + host + '\r\nContent-Length: ' + str(len(content)) + '\r\n\r\n' + content
     request_bytes =  bytes(request, 'utf-8') 
     try: 
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
@@ -38,7 +38,7 @@ def main():
     # extract output content - comes after \r\n\r\n
  
     # 2. Resolve hamming code on payload
-    databits = convert_payload_binary(payload)       #
+    databits = convert_payload_binary(payload)       #makes payload into binary
     print('binary payload: ')
     print(databits)
 
@@ -47,41 +47,39 @@ def main():
     print(corrected_databits, ' ', len(corrected_databits))
 
 
+    #3. RSA decryption
     d=48393883292703003300067554859838128129
     N=252837207378338387332619197259204540353
 
 
-    #convert the int to bytes, and concatenate each bytes  
-
-
     int_cipher = int(corrected_databits, 2)     #convert the bytes into an int, assumed big endian
-    #print('int_cipher: ', int_cipher)
+    print('int_cipher: ', int_cipher)
 
     decoded = pow(int_cipher, d, N)                     #decrypt the cipher(type is int, return an int)
-    #print('decoded: ', decoded)
+    print('decoded: ', decoded)
 
-
-    
+    #convert int into ascii -> to get the message
     decoded_bytes = int_to_Bytes(decoded)               #converts int and returns a list of 8bits binary in string format
     
     
     out = []
     for i in decoded_bytes:
         out.append(int(i, base=2))                      #converts string of 8bit (1s 0s) into ints of range(0-255)
-        #print('int char: ', int(i, base=2))
-    #print(decoded_bytes)
 
-    #print('Ascii: ')
+    #convert ints into char
     for i in out:
-        
-        print(i, chr(i), end = ' ')                         #convert int to ascii
+        print(i, chr(i), end = ' ')                     #convert int to ascii
        
  
     s.close()
  
 def convert_payload_binary(data):
-    print('data')
-    print(data)
+    '''
+    Input: array of hex (bytearray)
+    Output: string of binary (1s and 0s)
+    '''
+    #print('data')
+    #print(data)
 
     con = ''
     databits = []
@@ -89,7 +87,7 @@ def convert_payload_binary(data):
         integer = int(i)
         binary = bin(integer)
         binary = binary[2:]
-        if len(binary) < 8:
+        if len(binary) < 8:             #pad with zero if bits are less than zero -> ?? need to do that or no
             pad = 8 - len(binary)
             zeros = ''
             for i in range(pad):
@@ -97,34 +95,34 @@ def convert_payload_binary(data):
             binary = zeros+binary
         databits.append(binary) 
         con = con + binary
-   
-
-    # convert bitstring stored i list into byte string
-    #decrypt rsa https://www.kite.com/python/answers/how-to-encrypt-and-decrypt-a-message-with-rsa-in-python
     return con
  
-############HAMMING#############
 
 #DYNAMIC HAMMING DECODER
 def hamming (input):
-    #input = '011100101010'
+    '''
+    input: binary string of 1s and 0s
+    output: binary string of 1s and 0s - with parity bits removed
+    '''
+
+    #input = '011100101110'         #test input
 
     # caluclate number of parity bits
     n = len(input)
     numParity = math.log(n, 2) + 1
     numParity = math.floor(numParity)
-    # print(numParity)
+    #print('parity: ', numParity, n)
 
 
     data = input[::-1]
-    #data = '011100101110'
+    #data = input
     output = list(data)
     print(data)
     errorDetect = []
     lookup = []
 
     for i in range(numParity):
-        print('i:', i)
+        #print('i:', i)
         parity = 2 ** i  # 2^0, 2^1, 2^2, ...
         pos = parity - 1
         Sum = 0
@@ -137,83 +135,53 @@ def hamming (input):
             while (cluster < parity and start + cluster < len(data)):
                 Sum = Sum + int(data[start + cluster])
                 dataBits.append(start + cluster)
-                #print(data[start+cluster])
-
                 cluster = cluster + 1
 
             start = start + 2 * parity
 
-        print('Sum:', Sum)
         errorDetect.append(Sum % 2)
         lookup.append(dataBits)
-    # print(errorDetect)
 
     p = 0
     oddPar = []
     for x in errorDetect:
         if x == 1:
             oddPar.append(2**p)
+            print('index: ', 2**p)
         p = p + 1
 
-    # print(oddPar)
-    # print(lookup)
-
-    print('oddpar:', oddPar, sum(oddPar))
-    #index = Sum(oddPar)
     index = sum(oddPar)
     output[index-1] = str(int(not data[index-1]))
-    out = ' '
-    for x in output:
-        out = out + x
-
-    #print(data)
-    #print('corrected test: ', out)
 
     # remove parity bits
-    
-    c = 0
-    for r in range(numParity-1, 0):
-        par = (2 ** r)
-        print(output)
-        output.remove(output[par-1])
+    c = 0   #needed to update the index - as the index changes after each parity bit is removed                  
+    for r in range(0, numParity):
+        par = (2 ** r) - 1 - c
+        output.pop(par)
         c = c + 1
-        
-    r = numParity - 1
-    while r >= 0:
-        par = 2**r
-        output.pop(par-1)
-        r = r-1
 
-    output = output[::-1]
-    # print(output)
-    # print(type(output[0]))
-
+    
     # convert list output to string
     strOutput = ""
-    out = strOutput.join(output)
+    str_bin = strOutput.join(output)
 
-    return out
+    return str_bin
     
 def int_to_Bytes(integer):
-    
-    #print('int to sting of 0s and 1s')
-    #print(bin(integer))
+    '''
+    input: int
+    output: list of bytes(binary) - WHAT IF NOT DIVISIBLE BY 8????
+    '''
+
     binary = bin(integer)       #return binary of integers in string format 
     binary = binary[2:]         #chop off the first two element (0b)
-    print('binary: ', binary, len(binary))
-
-
 
     list_of_bytes = []          #will contain whole binary into list of 8bits (string)
     n = 8
-    l = [binary[i:i+8] for i in range(0, len(binary), n)]
-    print(l)
+    list_of_bytes = [binary[i:i+8] for i in range(0, len(binary), n)]
+    print(list_of_bytes)
         
-    #print(len(binary))
-    #print(list_of_bytes)
-
-
-    return l
+    return list_of_bytes
 
 
 
