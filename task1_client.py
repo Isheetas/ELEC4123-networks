@@ -1,5 +1,7 @@
 import socket
 import select
+import math
+
  
 def main():
  
@@ -33,48 +35,51 @@ def main():
     payload = response_tokens[1]
     print(payload)
  
-    
- 
     # extract output content - comes after \r\n\r\n
  
     # 2. Resolve hamming code on payload
-    decoded_payload = hamming_decode(payload)       #
+    databits = convert_payload_binary(payload)       #
+    print('binary payload: ')
+    print(databits)
 
+    corrected_databits = hamming(databits)
+    print('corrected: ')
+    print(corrected_databits, ' ', len(corrected_databits))
 
-    print('decoded_payload playload')
-    print(decoded_payload)
 
     d=48393883292703003300067554859838128129
     N=252837207378338387332619197259204540353
 
 
-    #convert the int to bytes, and concatenate each bytes       
-    b = b""                         
-    for x in decoded_payload:
-        b = b"".join([b, bytes([x])])
-        print(b)
-        #b is bytes in the formal b'\xc2x\xcb\xa3'
-    
-    int_cipher = int.from_bytes(b, byteorder='big')     #convert the bytes into an int, assumed big endian
-    print(int_cipher)
+    #convert the int to bytes, and concatenate each bytes  
+
+
+    int_cipher = int(corrected_databits, 2)     #convert the bytes into an int, assumed big endian
+    print('int_cipher: ', int_cipher)
 
     decoded = pow(int_cipher, d, N)                     #decrypt the cipher(type is int, return an int)
-    print(decoded)
+    print('decoded: ', decoded)
 
 
+    
     decoded_bytes = int_to_Bytes(decoded)               #converts int and returns a list of 8bits binary in string format
+    
+    
     out = []
     for i in decoded_bytes:
         out.append(int(i, base=2))                      #converts string of 8bit (1s 0s) into ints of range(0-255)
-        print(int(i, base=2))
+        print('int char: ', int(i, base=2))
     print(decoded_bytes)
 
+    print('Ascii: ')
     for i in out:
-        print(chr(i), end = '')                         #convert int to ascii
+        
+        print(i, chr(i), end = ' ')                         #convert int to ascii
+       
  
     s.close()
  
-def hamming_decode(data):
+def convert_payload_binary(data):
     print('data')
     print(data)
 
@@ -92,113 +97,124 @@ def hamming_decode(data):
             binary = zeros+binary
         databits.append(binary) 
         con = con + binary
-    print ('databits')
-    print (databits)
-    print('con')
-    print (con)
-        #print(integ)
-        #print(binar)
+   
 
-
-    
-
-    
-    i=0
-    alldata = []
-    while i<(len(databits)/8)-8:
-        databin = databits [i*8:(i*8+8)]
-        databin = databin[0:7]
-        out = hamming(databin)
-        alldata.append(out)
-        i=i+1
-    # print(alldata)
-    databyte = []
-    i=0
-
-    #print(databyte)
- 
-    while (i<len(alldata)-1):
-        if (i%2==0):
-            buff = alldata[i]+alldata[i+1]
-            databyte.append(buff)
-        i=i+1
-    #print('databyte')
-    #print ((databyte))
-    
-    i=0
-    listToStr = []
-    while (i<len(databyte)):
-        buff1 = ''.join([str(elem) for elem in databyte[i]])
-        buff1 = int(buff1,2)
-        listToStr.append(buff1)
-        i=i+1
-    #print (listToStr)
-    #print(len(listToStr))
- 
     # convert bitstring stored i list into byte string
     #decrypt rsa https://www.kite.com/python/answers/how-to-encrypt-and-decrypt-a-message-with-rsa-in-python
-    return listToStr
+    return con
  
 ############HAMMING#############
-def hamming (binInput):
-    #binInput = [1,0,1,1,0,1,0]
-    output = binInput
-   
-    p1 = [int(binInput[4]), int(binInput[2]), int(binInput[0]), int(binInput[6])]
-    p2 = [int(binInput[4]), int(binInput[1]), int(binInput[0]), int(binInput[5])]
-    p4 = [int(binInput[2]), int(binInput[1]), int(binInput[0]), int(binInput[3])]
-    parity = [sum(p1) % 2, sum(p2) % 2, sum(p4) % 2]
-    #print(parity)
-    # if even parity, flip errored bit
-    if parity[0] and parity[1] and parity[2]:
-        output[0] = int(not (binInput[0]))
-    elif parity[0] and parity[1]:
-        output[4] = int(not(binInput[4]))
-    elif parity[0] and parity[2]:
-        output[2] = int(not (binInput[2]))
-    elif parity[1] and parity[2]:
-        output[1] = int(not (binInput[1]))
-    elif parity[0]:
-        output[6] = int(not (binInput[6]))
-    elif parity[1]:
-        output[5] = int(not(binInput[5]))
-    elif parity[2]:
-        output[3] = int(not(binInput[3]))
- 
-    #print(output)
- 
-    #Remove parity bits to leave data bits only
-    output = [output[0],output[1],output[2],output[4]]
-#print(output)
-    return output
- 
-def access_bit(data, num):                  #bytes into binary (string)
-    base = int(num // 8)
-    shift = int(num % 8)
- 
-    return (data[base] & (1<<shift)) >> shift
 
+#DYNAMIC HAMMING DECODER
+def hamming (input):
+#    input = '01110101'
+
+    # caluclate number of parity bits
+    n = len(input)
+    numParity = math.log(n, 2) + 1
+    numParity = math.floor(numParity)
+    # print(numParity)
+
+
+    data = input[::-1]
+    output = list(data)
+    # print(data)
+    errorDetect = []
+    lookup = []
+
+    for i in range(numParity):
+        # print('i:', i)
+        parity = 2 ** i  # 2^0, 2^1, 2^2, ...
+        pos = parity - 1
+        sum = 0
+        start = pos
+        dataBits = []
+
+        while start < len(data):
+            cluster = 0
+
+            while (cluster < parity and start + cluster < len(data)):
+                sum = sum + int(data[start + cluster])
+                dataBits.append(start + cluster)
+                # print(data[start+cluster])
+
+                cluster = cluster + 1
+
+            start = start + 2 * parity
+
+        # print('sum:', sum)
+        errorDetect.append(sum % 2)
+        lookup.append(dataBits)
+    # print(errorDetect)
+
+    p = 0
+    oddPar = []
+    for x in errorDetect:
+        if x == 1:
+            oddPar.append(p)
+        p = p + 1
+
+    # print(oddPar)
+    # print(lookup)
+
+    erroneousSets = []
+    for x in oddPar:
+        erroneousSets.append(set(lookup[x]))
+
+    if len(oddPar) > 1:
+        u = set.intersection(*erroneousSets)
+        # print(input)
+        output[min(u)] = str(int(not data[min(u)]))
+
+    else:
+        output[oddPar[0]] = str(int(not data[oddPar[0]]))
+
+    # remove parity bits
+    '''
+    c = 0
+    for r in range(numParity-1, 0):
+        par = (2 ** r)
+        print(output)
+        output.remove(output[par-1])
+        c = c + 1
+        '''
+    r = numParity - 1
+    while r >= 0:
+        par = 2**r
+        output.pop(par-1)
+        r = r-1
+
+    output = output[::-1]
+    # print(output)
+    # print(type(output[0]))
+
+    # convert list output to string
+    strOutput = ""
+    out = strOutput.join(output)
+
+    return out
+    
 def int_to_Bytes(integer):
     
     #print('int to sting of 0s and 1s')
     #print(bin(integer))
     binary = bin(integer)       #return binary of integers in string format 
     binary = binary[2:]         #chop off the first two element (0b)
-    #print(binary)
+    print('binary: ', binary, len(binary))
+
+
 
     list_of_bytes = []          #will contain whole binary into list of 8bits (string)
-    i = 0
-    while i<(len(binary)/8)-8:              #size of list of bytes less than what it should be - need to fix
-        databin = binary [i*8:(i*8+8)]
-        list_of_bytes.append(databin)
-        i=i+1
-    
+    n = 8
+    l = [binary[i:i+8] for i in range(0, len(binary), n)]
+    print(l)
+        
     #print(len(binary))
-    #print(len(list_of_bytes))
+    #print(list_of_bytes)
 
 
+    return l
 
-    return list_of_bytes
 
 
  
