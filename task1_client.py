@@ -8,8 +8,17 @@ def main():
     # 1. Send well-formed HTTP requests
     HOST = '149.171.36.192'
     PORT = 12274
-    content = '252837207378338387332619197259204540353,65537'
     host = '149.171.36.192' 
+
+    #N = 63148583107154283585608284940392418734726981382069355868003882013090711003369
+    #e = 65537
+    #d = 51783437651169347215431900289402465246791119526563008636281618633074802696377
+    N = 252837207378338387332619197259204540353
+    e = 65537
+    d = 48393883292703003300067554859838128129
+
+    content = str(N) + "," + str(e)
+    print('content: ', content)
     # HTTP request headers
     request = 'GET / HTTP/1.1\r\nHost: ' + host + '\r\nContent-Length: ' + str(len(content)) + '\r\n\r\n' + content
     request_bytes =  bytes(request, 'utf-8') 
@@ -28,33 +37,35 @@ def main():
         response = s.recv(64000)
     #print(bytearray(data)) 
     
-    print(b'received msg: ' + response)
+    #print(b'received msg: ' + response)
     response_tokens = response.split(b'\r\n\r\n')
     response_header = response_tokens[0] + b'\r\n\r\n'
-    print(b'response header:' + response_header)
+    #print(b'response header:' + response_header)
     payload = response_tokens[1]
-    print(payload)
+    print('bytes: ',len(payload))
  
     # extract output content - comes after \r\n\r\n
  
     # 2. Resolve hamming code on payload
     databits = convert_payload_binary(payload)       #makes payload into binary
-    print('binary payload: ')
-    print(databits)
+    print('binary payload: ', databits, len(databits))
+    #print(databits)
 
     corrected_databits = hamming(databits)
-    print('corrected: ')
-    print(corrected_databits, ' ', len(corrected_databits))
-
-
-    #3. RSA decryption
-    d=48393883292703003300067554859838128129
-    N=252837207378338387332619197259204540353
-
+    #print('corrected: ')
+    print('corrected: ', corrected_databits, ' ', len(corrected_databits))
+  
 
     int_cipher = int(corrected_databits, 2)     #convert the bytes into an int, assumed big endian
-    print('int_cipher: ', int_cipher)
+    #print('int_cipher: ', int_cipher)
 
+    decrypted_payload = decrypt_rsa(int_cipher, N, d)
+    print('dec: ', decrypted_payload)
+    print('size: ', len(decrypted_payload))
+
+    #extract_marks(decrypted_payload)
+
+    '''
     decoded = pow(int_cipher, d, N)                     #decrypt the cipher(type is int, return an int)
     print('decoded: ', decoded)
 
@@ -69,10 +80,35 @@ def main():
     #convert ints into char
     for i in out:
         print(i, chr(i), end = ' ')                     #convert int to ascii
-       
+    '''
  
     s.close()
  
+def extract_marks(data):
+    n_entries = data[0]
+    print("n_entires: ", n_entries)
+    len_student_bytes = 10 # bytes taken up by each students information
+    n = 0
+    
+    while n < n_entries:
+        start = n*10 + 1
+        # print(response[i]) 
+        # first byte is number of students
+        name = str(data[start:(start + 4)])
+        t1 = data[start+5]
+        t2 = data[start+6]
+        t3 = data[start+7]
+        t4 = data[start+8]
+        total = data[start+9]
+        print('name: ' + name)
+        print('t1:',  t1)
+        print('t2:', t2)
+        print('t3:', t3)
+        print('t4:', t4)
+        print('total:', total)
+        n = n + 1
+    
+
 def convert_payload_binary(data):
     '''
     Input: array of hex (bytearray)
@@ -111,15 +147,14 @@ def hamming (input):
     n = len(input)
     numParity = math.log(n, 2) + 1
     numParity = math.floor(numParity)
-    #print('parity: ', numParity, n)
+    print('parity: ', numParity, n)
 
 
-    data = input[::-1]
+    data = input[::-1]          #flip data 
     #data = input
     output = list(data)
-    print(data)
     errorDetect = []
-    lookup = []
+    #lookup = []
 
     for i in range(numParity):
         #print('i:', i)
@@ -140,27 +175,42 @@ def hamming (input):
             start = start + 2 * parity
 
         errorDetect.append(Sum % 2)
-        lookup.append(dataBits)
+        #lookup.append(dataBits)
 
     p = 0
     oddPar = []
     for x in errorDetect:
         if x == 1:
             oddPar.append(2**p)
-            print('index: ', 2**p)
+            #print('index: ', 2**p)
         p = p + 1
 
     index = sum(oddPar)
+    #print('incorred index: ', index)
+    #print(output[index-1])
+
     output[index-1] = str(int(not data[index-1]))
+    #print('in_data: ')
+    #print(data)
+    #print("".join(output))
 
     # remove parity bits
-    c = 0   #needed to update the index - as the index changes after each parity bit is removed                  
-    for r in range(0, numParity):
-        par = (2 ** r) - 1 - c
-        output.pop(par)
-        c = c + 1
+    r = numParity - 1
+    while r >= 0:
+        par = 2**r
+        output.pop(par-1)
+        r = r-1
 
+
+    output = output[::-1]
+    print("ouptut before rem: ", "".join(output), len(output))
+
+    if (len(output) > 256):
+        rem_bits = len(output) - 256
+        print('rem_bits: ', rem_bits)
+        output = output[rem_bits:]
     
+
     # convert list output to string
     strOutput = ""
     str_bin = strOutput.join(output)
@@ -182,6 +232,12 @@ def int_to_Bytes(integer):
     print(list_of_bytes)
         
     return list_of_bytes
+
+def decrypt_rsa(cipher_int, n, d):
+    #cipher_int = int.from_bytes(cipher_bytes, byteorder='big') # convert cipher to integer form
+    plaintext_int = pow(cipher_int, int(d), int(n))
+    plaintext_bytes = plaintext_int.to_bytes((plaintext_int.bit_length() + 7) // 8, 'big')
+    return plaintext_bytes
 
 
 
