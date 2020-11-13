@@ -2,200 +2,139 @@ import socket
 import select
 import json
 import struct
+from utility import *
+
+'''
+task 2 server
+functions needed: 
+    - add hamming code (parity bits) (input: binary, output: binary)
+    - decode hamming code (to get the message) (input: binary, output: binary)
+    - encrypt RSA
+    - decrypt RSA
+    - change data
+
+Questions: 
+    - is our socket meant to be listening to arash's socket 
+     (to see when arahs' client has requested marks) -> in that case, would our program be a server?
+      because -> Arash's client returns a GET request with N and e
+
+'''
 
 def main():
     # these values will be recieved from client
-    n = '252837207378338387332619197259204540353'
-    e = '65537'
-    d = '48393883292703003300067554859838128129'
-    print(int(d))
+    N = 252837207378338387332619197259204540353
+    e = 65537
+    d = 48393883292703003300067554859838128129
 
     '''
-    0. get request from client
+    0. send request to client (db?) and get message
     '''
 
-    '''
-    1. get a json serialisable object
-    '''
-    payload = Database()
-    payload.add_student(Student('Jason', '20', '10', '30', '10', '70'))
-    payload.add_student(Student('Jack', '5', '5', '20', '10', '40'))
-    payload.add_student(Student('Jane', '10', '10', '10', '10', '40'))
-    payload.add_student(Student('John', '25', '10', '40', '10', '85'))
+    HOST = '149.171.36.192'
+    PORT_client = 12275
+    PORT_db = 12274
 
+    msg = get_data_from_db(HOST, PORT_db, N, e, d)
+    msg_bin = convert_payload_binary(msg)
+    corrected_msg = hamming(msg_bin)
+    corrected_msg = int(corrected_msg, 2)
+    msg_bytes = corrected_msg.to_bytes((corrected_msg.bit_length() + 7) // 8, 'big')
 
-    '''
-    2. Alter payload struct
-    '''
-    
-    ''' 
-    3. convert database structure to json serialisable object
-    '''
-    json_payload = json.dumps(payload.as_dict())
-    print('json payload:' + json_payload)
-    '''
-    4. encrypt with rsa
-    '''
-    plaintext = b'\x03Marie\x0c\x06#\x038Alexa\x11\t*\x06JDavid\t\t\x1c\x064'
+    decrypt_msg = decrypt_rsa(msg_bytes, N, d)
 
-
-    n_entries = plaintext[0]
-    len_student_bytes = 10 # bytes taken up by each students information
-    n = 0
-    while n < n_entries:
-        start = n*10 + 1
-        # print(response[i]) 
-        # first byte is number of students
-        name = str(plaintext[start:(start + 4)], 'utf-8')
-        t1 = plaintext[start+5]
-        t2 = plaintext[start+6]
-        t3 = plaintext[start+7]
-        t4 = plaintext[start+8]
-        total = plaintext[start+9]
-        print('name:' + name)
-        print('t1: ',  t1)
-        print('t2: ', t2)
-        print('t3: ', t3)
-        print('t4: ', t4)
-        print('total: ', total)
-        # next five bytes form name
-
-
-        n += 1
-
-
-
-
-    print(plaintext)
-    encrypted_payload = encrypt_rsa(plaintext, n, e)
-    print(encrypted_payload)
-    decrypted_payload = decrypt_rsa(encrypted_payload, n, d)
-    print(decrypted_payload)
-
-    # n_entries = decrypted_payload[0]
-    # len_student_bytes = 10 # bytes taken up by each students information
-    # n = 0
-    # while n < n_entries:
-    #     start = n*10 + 1
-    #     # print(response[i]) 
-    #     # first byte is number of students
-    #     name = str(plaintext[start:(start + 4)], 'utf-8')
-    #     t1 = decrypted_payload[start+5]
-    #     t2 = decrypted_payload[start+6]
-    #     t3 = decrypted_payload[start+7]
-    #     t4 = decrypted_payload[start+8]
-    #     total = decrypted_payload[start+9]
-    #     print('name:' + name)
-    #     print('t1: ',  t1)
-    #     print('t2: ', t2)
-    #     print('t3: ', t3)
-    #     print('t4: ', t4)
-    #     print('total: ', total)
-        # next five bytes form name
-
-
-    #    n += 1
+    print('dec msg: ', decrypt_msg)
 
     '''
-    5. encode to hamming
+    1. Create a database class
     '''
+    db = create_db(decrypt_msg)
+    #print('before: ', db.json())
+
+    '''
+    2. Alter database
+    '''
+    db.change_marks()
+    #print('after: ', db.json())
+
+    '''
+    3. Convert db to bytes
+    '''
+    changed_bytes = db_to_bytes(db)
+
+    '''
+    4. Hamming encode
+    '''
+    hamming_bin = hamming_encode(changed_bytes)
+    hamming_int = int(hamming_bin)
+
+    '''
+    5. Encrypt with rsa
+    '''
+    send_byte = encrypt_rsa(hamming_int, N, e)
+    print('to send: ', send_byte)
 
     '''
     6. construct response and sent to user
     '''
+    content = str(send_byte)
+    print('content:', content)
+    request = 'POST / HTTP/1.1\r\nHost: ' + HOST + '\r\nContent-Length: ' + str(len(content)) + '\r\n\r\n' + content
+    req_bytes = bytes(request, 'utf-8') 
 
+    print('req:', request)
 
+    try: 
+        s_client = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
+        print ("Socket successfully created to Arash")
+    except socket.error as err: 
+        print ("socket creation failed with error %s to Arash" %(err))
+    s_client.connect((HOST, PORT_client))
+    #s_client.send (req_bytes)
 
+    ready = select.select([s_client], [], [], 10)
+    if ready[0]:
+        response = s_client.recv(64000)
+        print('response from arash client: ', response) 
 
-'''
-Encrypt with RSA 
-Input plaintext (String e.g 'Hello') - payload to encrypt as a text string, n(String), e(String)
-Output cipher_bytes (String e.g  b'\xa9z\xb7\xf3\')
-'''
-def encrypt_rsa(plaintext_bytes, n, e):
-    plaintext_int = int.from_bytes(plaintext_bytes, byteorder='big') # convert plaintext to integer form
-    cipher_int = pow(plaintext_int, int(e), int(n))
-    cipher_bytes = cipher_int.to_bytes((cipher_int.bit_length() + 7) // 8, 'big')
-    # cipher = str(cipher_bytes, 'utf-8')
-    return cipher_bytes
-
-
-'''
-Decrypt with RSA
-Input cipher (Byte String e.g. b'\xa9z\xb7\xf3\') - payload to decrypt as a text string, n(String), d(String)
-Output plaintext (String e.g 'Hello')
-'''
-def decrypt_rsa(cipher_bytes, n, d):
-    cipher_int = int.from_bytes(cipher_bytes, byteorder='big') # convert cipher to integer form
-    plaintext_int = pow(cipher_int, int(d), int(n))
-    plaintext_bytes = plaintext_int.to_bytes((plaintext_int.bit_length() + 7) // 8, 'big')
-    return plaintext_bytes
-
-
-
-
-'''
-TBD: decode with hamming
-'''
-def hamming_decode(byte_string):
-    return 0
-
-
-
-'''
-TBD: encode with hamming
-'''
-def hamming_encode(byte_string):
-    return 0
-
-
-'''
-CLASS DEFINITIONS
-'''
-
-
-class Database:
-    def __init__(self):
-        self.n_entries = 0
-        self.sample = list()
-
-    def add_student(self, student):
-        self.sample.append(student)
-        self.n_entries += 1
-
-    def as_dict(self):
-        student_dict = list()
-        for student in self.sample:
-            student_dict.append(student.as_dict())
-
-        return {
-            "n_entries": self.n_entries,
-            "sample": student_dict,
-        }
+    s_client.close
     
 
 
-class Student:
-    def __init__(self, name, mark_task1, mark_task2, mark_task3, mark_task4, mark_total):
-        self.student_name= name
-        self.mark_task1 = mark_task1
-        self.mark_task2 = mark_task2
-        self.mark_task3 = mark_task3
-        self.mark_task4 = mark_task4
-        self.mark_total = mark_total 
 
-    def as_dict(self):
-        return {
-            "student_name": self.student_name,
-            "mark_task1": self.mark_task1,
-            "mark_task2": self.mark_task2,
-            "mark_task3": self.mark_task3,
-            "mark_task4": self.mark_task4,
-            "mark_total": self.mark_total
-        }
+def bytes_to_int(byte):
+    print('in bytes->int')
+    fin = ""
+    print(len(byte))
+    for i in byte:
+        binary = bin(i)
+        binary = binary[2:]
+        fin = fin + binary.zfill(8) 
+    print(fin, len(fin))
+
+    integer = int(fin, 2)
+    print('integer: ', integer)
+
+
+    return integer
+
+def int_to_bytes(integer):
+    '''
+    input: int
+    output: list of bytes(binary) - WHAT IF NOT DIVISIBLE BY 8????
+    '''
+
+    binary = bin(integer)       #return binary of integers in string format 
+    binary = binary[2:]         #chop off the first two element (0b)
+
+    print('bin: ', integer)
+    list_of_bytes = []          #will contain whole binary into list of 8bits (string)
+    n = 8
+    list_of_bytes = [binary[i:i+8] for i in range(0, len(binary), n)]
+
+    print('list of bytes: ', list_of_bytes)
+        
+    return list_of_bytes
     
-
-
 
 if __name__ == '__main__':
     main()
