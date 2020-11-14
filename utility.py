@@ -97,7 +97,10 @@ def hamming (input):
 
 
 
-    output[index-1] = str(int(not data[index-1]))
+    if data[index - 1] == '1':
+        output[index - 1] = str(0)
+    else:
+        output[index - 1] = str(1)
 
 
 
@@ -330,8 +333,6 @@ class Database:
 
     def json(self):
         return json.dumps(self.as_dict())
-    
-
 
 class Student:
     def __init__(self, name, mark_task1, mark_task2, mark_task3, mark_task4, mark_total):

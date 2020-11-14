@@ -49,44 +49,25 @@ def main():
     # 2. Resolve hamming code on payload
     databits = convert_payload_binary(payload)       #makes payload into binary
     print('binary payload: ', databits, len(databits))
-    #print(databits)
 
     corrected_databits = hamming(databits)
-    #print('corrected: ')
     print('corrected: ', corrected_databits, ' ', len(corrected_databits))
   
 
     int_cipher = int(corrected_databits, 2)     #convert the bytes into an int, assumed big endian
-    #print('int_cipher: ', int_cipher)
+    print('int_cipher: ', int_cipher)
 
     decrypted_payload = decrypt_rsa(int_cipher, N, d)
     print('dec: ', decrypted_payload)
     print('size: ', len(decrypted_payload))
 
-    #extract_marks(decrypted_payload)
-
-    '''
-    decoded = pow(int_cipher, d, N)                     #decrypt the cipher(type is int, return an int)
-    print('decoded: ', decoded)
-
-    #convert int into ascii -> to get the message
-    decoded_bytes = int_to_Bytes(decoded)               #converts int and returns a list of 8bits binary in string format
-    
-    
-    out = []
-    for i in decoded_bytes:
-        out.append(int(i, base=2))                      #converts string of 8bit (1s 0s) into ints of range(0-255)
-
-    #convert ints into char
-    for i in out:
-        print(i, chr(i), end = ' ')                     #convert int to ascii
-    '''
- 
+    extract_marks(decrypted_payload)
     s.close()
  
 def extract_marks(data):
     n_entries = data[0]
-    print("n_entires: ", n_entries)
+
+    print("n_entires: ", len(data))
     len_student_bytes = 10 # bytes taken up by each students information
     n = 0
     
@@ -94,13 +75,13 @@ def extract_marks(data):
         start = n*10 + 1
         # print(response[i]) 
         # first byte is number of students
-        name = str(data[start:(start + 4)])
+        name = str(data[start:(start + 5)])
         t1 = data[start+5]
         t2 = data[start+6]
         t3 = data[start+7]
         t4 = data[start+8]
         total = data[start+9]
-        print('name: ' + name)
+        print('name: ', name)
         print('t1:',  t1)
         print('t2:', t2)
         print('t3:', t3)
@@ -147,7 +128,7 @@ def hamming (input):
     n = len(input)
     numParity = math.log(n, 2) + 1
     numParity = math.floor(numParity)
-    print('parity: ', numParity, n)
+    #print('parity: ', numParity, n)
 
 
     data = input[::-1]          #flip data 
@@ -166,13 +147,15 @@ def hamming (input):
 
         while start < len(data):
             cluster = 0
+            #print("start: ", start)
 
             while (cluster < parity and start + cluster < len(data)):
                 Sum = Sum + int(data[start + cluster])
                 dataBits.append(start + cluster)
-                cluster = cluster + 1
+                cluster = cluster + 1            
 
             start = start + 2 * parity
+            #print('cluster: ', cluster + start)
 
         errorDetect.append(Sum % 2)
         #lookup.append(dataBits)
@@ -186,10 +169,18 @@ def hamming (input):
         p = p + 1
 
     index = sum(oddPar)
-    #print('incorred index: ', index)
+    print('incorred index: ', index)
     #print(output[index-1])
 
-    output[index-1] = str(int(not data[index-1]))
+    print('bef: ', data[index-1])
+
+    if data[index - 1] == '1':
+        output[index - 1] = str(0)
+    else:
+        output[index - 1] = str(1)
+    #output[index-1] = str(int(not data[index-1]))
+    print('aft: ', output[index-1])
+
     #print('in_data: ')
     #print(data)
     #print("".join(output))
@@ -203,12 +194,12 @@ def hamming (input):
 
 
     output = output[::-1]
-    print("ouptut before rem: ", "".join(output), len(output))
+    #print("ouptut before rem: ", "".join(output), len(output))
 
-    if (len(output) > 256):
-        rem_bits = len(output) - 256
-        print('rem_bits: ', rem_bits)
-        output = output[rem_bits:]
+    #if (len(output) > 256):
+    #    rem_bits = len(output) - 256
+    #    print('rem_bits: ', rem_bits)
+    #    output = output[rem_bits:]
     
 
     # convert list output to string
