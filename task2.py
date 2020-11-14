@@ -26,13 +26,48 @@ def main():
     e = 65537
     d = 48393883292703003300067554859838128129
 
+    HOST = '149.171.36.192'
+    PORT_client = 12275
+    PORT_db = 12274
+
+    '''
+    -1. Get data from arash's client
+    '''
+
+    try: 
+        s_client = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
+        print ("Socket successfully created to Arash")
+    except socket.error as err: 
+        print ("socket creation failed with error %s to Arash" %(err))
+    s_client.connect((HOST, PORT_client))
+    #s_client.send (req_bytes)
+
+    ready = select.select([s_client], [], [], 10)
+    if ready[0]:
+        response = s_client.recv(64000)
+        print('response from arash client: ', response) 
+
+    s_client.close
+
+    response_tokens = response.split(b'\r\n\r\n')
+    response_header = response_tokens[0] + b'\r\n\r\n'
+    #print(b'response header:' + response_header)
+    payload = str(response_tokens[1])
+    payload = payload[2:len(payload)-1]
+    
+
+    payload_split = payload.split(',')
+    N_client = int(payload_split[0])
+    e_client = int(payload_split[1])
+
+
+
+
     '''
     0. send request to client (db?) and get message
     '''
 
-    HOST = '149.171.36.192'
-    PORT_client = 12275
-    PORT_db = 12274
+    
 
     msg = get_data_from_db(HOST, PORT_db, N, e, d)
     msg_bin = convert_payload_binary(msg)
@@ -76,27 +111,7 @@ def main():
     '''
     6. construct response and sent to user
     '''
-    content = str(send_byte)
-    print('content:', content)
-    request = 'POST / HTTP/1.1\r\nHost: ' + HOST + '\r\nContent-Length: ' + str(len(content)) + '\r\n\r\n' + content
-    req_bytes = bytes(request, 'utf-8') 
-
-    print('req:', request)
-
-    try: 
-        s_client = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
-        print ("Socket successfully created to Arash")
-    except socket.error as err: 
-        print ("socket creation failed with error %s to Arash" %(err))
-    s_client.connect((HOST, PORT_client))
-    #s_client.send (req_bytes)
-
-    ready = select.select([s_client], [], [], 10)
-    if ready[0]:
-        response = s_client.recv(64000)
-        print('response from arash client: ', response) 
-
-    s_client.close
+    
     
 
 
