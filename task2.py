@@ -68,9 +68,11 @@ def main():
     '''
 
     
-
-    msg = get_data_from_db(HOST, PORT_db, N, e, d)
-    msg_bin = convert_payload_binary(msg)
+    # return message header for future use as we
+    response = get_data_from_db(HOST, PORT_db, N, e, d)
+    msg = response.get_content()
+    msg_bin = bytes_to_bits(msg)
+    # msg_bin = convert_payload_binary(msg)
     corrected_msg = hamming(msg_bin)
     corrected_msg = int(corrected_msg, 2)
     msg_bytes = corrected_msg.to_bytes((corrected_msg.bit_length() + 7) // 8, 'big')
@@ -94,7 +96,7 @@ def main():
     '''
     3. Convert db to bytes
     '''
-    changed_bytes = db.to_bytes()
+    changed_bytes = db.get_bytes()
 
     '''
     4. Hamming encode
@@ -111,7 +113,8 @@ def main():
     '''
     6. construct response and sent to user
     '''
-    
+    response.set_content(send_byte)
+    print('full response string:', response.as_string())
     
 
 

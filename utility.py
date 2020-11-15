@@ -3,6 +3,20 @@ import socket
 import select
 import json
 import struct
+from bitstring import BitArray
+
+
+
+def bytes_to_bits(byte_array):
+    '''
+    Input: array of hex (bytearray)
+    Output: string of binary (1s and 0s) nb return bitclass if necessary: get rid of .bin
+    '''
+    res = BitArray(byte_array) #type - bitclass - use .bin method to see bits
+    return res.bin
+
+
+
 
 def get_data_from_db(host, port, N, e, d):
     
@@ -24,18 +38,21 @@ def get_data_from_db(host, port, N, e, d):
     
     ready = select.select([s], [], [], 10)
     if ready[0]:
-        response = s.recv(64000)
+        recieved = s.recv(64000)
     #print(bytearray(data)) 
 
     s.close
+
+    response = HTTP_message(recieved)
+    return response
     
-    #print(b'received msg: ' + response)
-    response_tokens = response.split(b'\r\n\r\n')
-    response_header = response_tokens[0] + b'\r\n\r\n'
-    #print(b'response header:' + response_header)
-    payload = response_tokens[1]
-    #print('bytes: ',len(payload))
-    return payload
+    # print(b'received msg: ' + response)
+    # response_tokens = response.split(b'\r\n\r\n')
+    # response_header = response_tokens[0] + b'\r\n\r\n'
+    # print(b'response header:' + response_header)
+    # payload = response_tokens[1]
+    # #print('bytes: ',len(payload))
+    # return response_tokens
 
 def hamming (input):
     '''
@@ -126,30 +143,6 @@ def hamming (input):
     str_bin = strOutput.join(output)
 
     return str_bin
-    
-def convert_payload_binary(data):
-    '''
-    Input: array of hex (bytearray)
-    Output: string of binary (1s and 0s)
-    '''
-    #print('data')
-    #print(data)
-
-    con = ''
-    databits = []
-    for i in data:
-        integer = int(i)
-        binary = bin(integer)
-        binary = binary[2:]
-        if len(binary) < 8:             #pad with zero if bits are less than zero -> ?? need to do that or no
-            pad = 8 - len(binary)
-            zeros = ''
-            for i in range(pad):
-                zeros = zeros+'0'
-            binary = zeros+binary
-        databits.append(binary) 
-        con = con + binary
-    return con
 
 def decrypt_rsa(cipher_bytes, n, d):
     '''
@@ -305,7 +298,7 @@ class Database:
     def json(self):
         return json.dumps(self.as_dict())
 
-    def to_bytes(self):
+    def get_bytes(self):
         size = 10*self.n_entries + 1
         msg_byte = bytearray(size)
         i = 0
@@ -357,6 +350,70 @@ class Student:
         ret = bytes(self.student_name) + bytes(self.mark_task1) + bytes(self.mark_task2) \
                 + bytes(self.mark_task3) + bytes(self.mark_task4) + bytes(self.mark_total)
         return ret
-    
 
+
+
+''' 
+http message class
+construct and extract parts of http message
+'''
+class HTTP_message:
+    def __init__(self, message_string):
+        response_tokens = message_string.split(b'\r\n\r\n')
+        self.header = response_tokens[0] + b'\r\n\r\n'
+        #print(b'response header:' + response_header)
+        self.content = response_tokens[1]
     
+    def get_header(self):
+        return self.header
+    
+    def get_content(self):
+        return self.content
+    
+    def as_string(self):
+        # return full message as string
+        return self.header + self.content
+
+    def set_content(self, content_bytes):
+        self.content = content_bytes
+        '''
+        input: hex_string of content bytes
+        '''
+        # update content part of message
+
+
+
+
+
+
+
+
+
+
+
+
+
+# original payload to binary function - replaced by byte_to_bits
+# def convert_payload_binary(data):
+#     '''
+#     Input: array of hex (bytearray)
+#     Output: string of binary (1s and 0s)
+#     '''
+#     #print('data')
+#     #print(data)
+
+#     con = ''
+#     databits = []
+#     for i in data:
+#         integer = int(i)
+#         binary = bin(integer)
+#         binary = binary[2:]
+#         if len(binary) < 8:             #pad with zero if bits are less than zero -> ?? need to do that or no
+#             pad = 8 - len(binary)
+#             zeros = ''
+#             for i in range(pad):
+#                 zeros = zeros+'0'
+#             binary = zeros+binary
+#         databits.append(binary) 
+#         con = con + binary
+#     return con
