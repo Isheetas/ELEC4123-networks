@@ -4,6 +4,7 @@ import select
 import json
 import struct
 from type_conversions import *
+from rsa import *
 
 
 def get_data_from_db(host, port, N, e, d):
@@ -124,18 +125,8 @@ def hamming (input):
 
     return str_bin
 
-def decrypt_rsa(cipher_bytes, n, d):
-    '''
-    Decrypt with RSA
-    Input cipher (Byte String e.g. b'\xa9z\xb7\xf3\') - payload to decrypt as a text string, n(String), d(String)
-    Output plaintext (String e.g 'Hello')
-    '''
-    cipher_int = int.from_bytes(cipher_bytes, byteorder='big') # convert cipher to integer form
-    #print('dec_cipher_int: ', cipher_int)
-    #print('dec_cipher_byt: ', cipher_bytes)
-    plaintext_int = pow(cipher_int, int(d), int(n))
-    plaintext_bytes = int_to_bytes(plaintext_int)
-    return plaintext_bytes
+
+
 
 def create_db(msg_bytes):
     db = Database()
@@ -233,15 +224,6 @@ def hamming_encode(msg_byte):
 
     return out
 
-def encrypt_rsa(msg_int, n, e):
-    '''
-    Encrypt with RSA 
-    Input plaintext (String e.g 'Hello') - payload to encrypt as a text string, n(String), e(String)
-    Output cipher_bytes (String e.g  b'\xa9z\xb7\xf3\')
-    '''
-    cipher_int = pow(msg_int, int(e), int(n))
-    cipher_bytes = int_to_bytes(cipher_int)
-    return cipher_bytes
 
 '''
 CLASS DEFINITIONS

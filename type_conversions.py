@@ -7,20 +7,7 @@ FUNCTIONS TO CONVERT BETWEEN PYTHON TYPES
 '''
 
 def bytes_to_int(byte):
-    print('in bytes->int')
-    fin = ""
-    print(len(byte))
-    for i in byte:
-        binary = bin(i)
-        binary = binary[2:]
-        fin = fin + binary.zfill(8) 
-    print(fin, len(fin))
-
-    integer = int(fin, 2)
-    print('integer: ', integer)
-
-
-    return integer
+    return int.from_bytes(byte, byteorder='big') # convert cipher to integer form
 
 def int_to_bytes(integer_val):
     '''

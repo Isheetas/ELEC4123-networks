@@ -77,9 +77,9 @@ def main():
     # msg_bin = convert_payload_binary(msg)
     corrected_msg = hamming(msg_bin)
     corrected_msg = int(corrected_msg, 2)
-    msg_bytes = int_to_bytes(corrected_msg)
 
-    decrypt_msg = decrypt_rsa(msg_bytes, N, d)
+    # decrypt_msg = decrypt_rsa(msg_bytes, N, d)
+    decrypt_msg = decrypt_rsa(corrected_msg, N, d)
 
     print('dec msg: ', decrypt_msg)
 

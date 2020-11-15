@@ -1,7 +1,8 @@
 import socket
 import select
 import math
-from type_conversions import bytes_to_bits
+from type_conversions import bytes_to_bits, int_to_bytes
+from rsa import decrypt_rsa
 
  
 def main():
@@ -185,12 +186,6 @@ def hamming (input):
 
     return str_bin
     
-
-def decrypt_rsa(cipher_int, n, d):
-    #cipher_int = int.from_bytes(cipher_bytes, byteorder='big') # convert cipher to integer form
-    plaintext_int = pow(cipher_int, int(d), int(n))
-    plaintext_bytes = plaintext_int.to_bytes((plaintext_int.bit_length() + 7) // 8, 'big')
-    return plaintext_bytes
 
 
 
