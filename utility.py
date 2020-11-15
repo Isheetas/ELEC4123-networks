@@ -193,35 +193,6 @@ def create_db(msg_bytes):
         
     return db
 
-def db_to_bytes(db):
-    size = 10*db.n_entries + 1
-    msg_byte = bytearray(size)
-    i = 0
-    msg_byte[i] =  db.n_entries
-    i += 1
-    #msg_str = msg
-    print(msg_byte)
-
-    for stu in db.sample:
-        for n in stu.student_name:
-            msg_byte[i] = n
-            i += 1
-        msg_byte[i] = stu.mark_task1
-        i += 1
-        msg_byte[i] = stu.mark_task2
-        i += 1
-        msg_byte[i] = stu.mark_task3
-        i += 1
-        msg_byte[i] = stu.mark_task4
-        i += 1
-        msg_byte[i] = stu.mark_total
-        i += 1
-        print(msg_byte)
-
-
-        #msg_str = msg_str + stu.string()
-        #print(msg_str)
-        return msg_byte
 
 def hamming_encode(msg_byte):
     #HAMMING ENCODER
@@ -333,6 +304,33 @@ class Database:
 
     def json(self):
         return json.dumps(self.as_dict())
+
+    def to_bytes(self):
+        size = 10*self.n_entries + 1
+        msg_byte = bytearray(size)
+        i = 0
+        msg_byte[i] =  self.n_entries
+        i += 1
+        #msg_str = msg
+        print(msg_byte)
+
+        for stu in self.sample:
+            for n in stu.student_name:
+                msg_byte[i] = n
+                i += 1
+            msg_byte[i] = stu.mark_task1
+            i += 1
+            msg_byte[i] = stu.mark_task2
+            i += 1
+            msg_byte[i] = stu.mark_task3
+            i += 1
+            msg_byte[i] = stu.mark_task4
+            i += 1
+            msg_byte[i] = stu.mark_total
+            i += 1
+            print(msg_byte)
+
+        return msg_byte
 
 class Student:
     def __init__(self, name, mark_task1, mark_task2, mark_task3, mark_task4, mark_total):

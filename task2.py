@@ -94,7 +94,7 @@ def main():
     '''
     3. Convert db to bytes
     '''
-    changed_bytes = db_to_bytes(db)
+    changed_bytes = db.to_bytes()
 
     '''
     4. Hamming encode
