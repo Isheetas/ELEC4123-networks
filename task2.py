@@ -6,6 +6,7 @@ from utility import *
 import time
 
 
+
 '''
 task 2 server
 functions needed: 
@@ -75,7 +76,7 @@ def main():
     msg = response.get_content()
     msg_bin = bytes_to_bits(msg)
     # msg_bin = convert_payload_binary(msg)
-    corrected_msg = hamming(msg_bin)
+    corrected_msg = hamming_decode(msg_bin)
     corrected_msg = int(corrected_msg, 2)
 
     # decrypt_msg = decrypt_rsa(msg_bytes, N, d)

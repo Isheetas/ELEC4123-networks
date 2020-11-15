@@ -3,6 +3,8 @@ import select
 import math
 from type_conversions import bytes_to_bits, int_to_bytes
 from rsa import decrypt_rsa
+from hamming import hamming_decode
+
 
  
 def main():
@@ -18,6 +20,8 @@ def main():
     N = 252837207378338387332619197259204540353
     e = 65537
     d = 48393883292703003300067554859838128129
+
+
 
     content = str(N) + "," + str(e)
     print('content: ', content)
@@ -52,7 +56,7 @@ def main():
     databits = bytes_to_bits(payload)       #makes payload into binary
     print('binary payload: ', databits, len(databits))
 
-    corrected_databits = hamming(databits)
+    corrected_databits = hamming_decode(databits)
     print('corrected: ', corrected_databits, ' ', len(corrected_databits))
   
 
@@ -91,101 +95,7 @@ def extract_marks(data):
         print('total:', total)
         n = n + 1
     
- 
-
-#DYNAMIC HAMMING DECODER
-def hamming (input):
-    '''
-    input: binary string of 1s and 0s
-    output: binary string of 1s and 0s - with parity bits removed
-    '''
-
-    #input = '011100101110'         #test input
-
-    # caluclate number of parity bits
-    n = len(input)
-    numParity = math.log(n, 2) + 1
-    numParity = math.floor(numParity)
-    #print('parity: ', numParity, n)
-
-
-    data = input[::-1]          #flip data 
-    #data = input
-    output = list(data)
-    errorDetect = []
-    #lookup = []
-
-    for i in range(numParity):
-        #print('i:', i)
-        parity = 2 ** i  # 2^0, 2^1, 2^2, ...
-        pos = parity - 1
-        Sum = 0
-        start = pos
-        dataBits = []
-
-        while start < len(data):
-            cluster = 0
-            #print("start: ", start)
-
-            while (cluster < parity and start + cluster < len(data)):
-                Sum = Sum + int(data[start + cluster])
-                dataBits.append(start + cluster)
-                cluster = cluster + 1            
-
-            start = start + 2 * parity
-            #print('cluster: ', cluster + start)
-
-        errorDetect.append(Sum % 2)
-        #lookup.append(dataBits)
-
-    p = 0
-    oddPar = []
-    for x in errorDetect:
-        if x == 1:
-            oddPar.append(2**p)
-            #print('index: ', 2**p)
-        p = p + 1
-
-    index = sum(oddPar)
-    print('incorred index: ', index)
-    #print(output[index-1])
-
-    print('bef: ', data[index-1])
-
-    if data[index - 1] == '1':
-        output[index - 1] = str(0)
-    else:
-        output[index - 1] = str(1)
-    #output[index-1] = str(int(not data[index-1]))
-    print('aft: ', output[index-1])
-
-    #print('in_data: ')
-    #print(data)
-    #print("".join(output))
-
-    # remove parity bits
-    r = numParity - 1
-    while r >= 0:
-        par = 2**r
-        output.pop(par-1)
-        r = r-1
-
-
-    output = output[::-1]
-    #print("ouptut before rem: ", "".join(output), len(output))
-
-    #if (len(output) > 256):
-    #    rem_bits = len(output) - 256
-    #    print('rem_bits: ', rem_bits)
-    #    output = output[rem_bits:]
-    
-
-    # convert list output to string
-    strOutput = ""
-    str_bin = strOutput.join(output)
-
-    return str_bin
-    
+   
 
 
 
