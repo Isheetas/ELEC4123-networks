@@ -3,19 +3,7 @@ import socket
 import select
 import json
 import struct
-from bitstring import BitArray
-
-
-
-def bytes_to_bits(byte_array):
-    '''
-    Input: array of hex (bytearray)
-    Output: string of binary (1s and 0s) nb return bitclass if necessary: get rid of .bin
-    '''
-    res = BitArray(byte_array) #type - bitclass - use .bin method to see bits
-    return res.bin
-
-
+from type_conversions import *
 
 
 def get_data_from_db(host, port, N, e, d):
@@ -43,16 +31,8 @@ def get_data_from_db(host, port, N, e, d):
 
     s.close
 
-    response = HTTP_message(recieved)
-    return response
+    return HTTP_message(recieved)
     
-    # print(b'received msg: ' + response)
-    # response_tokens = response.split(b'\r\n\r\n')
-    # response_header = response_tokens[0] + b'\r\n\r\n'
-    # print(b'response header:' + response_header)
-    # payload = response_tokens[1]
-    # #print('bytes: ',len(payload))
-    # return response_tokens
 
 def hamming (input):
     '''
@@ -154,7 +134,7 @@ def decrypt_rsa(cipher_bytes, n, d):
     #print('dec_cipher_int: ', cipher_int)
     #print('dec_cipher_byt: ', cipher_bytes)
     plaintext_int = pow(cipher_int, int(d), int(n))
-    plaintext_bytes = plaintext_int.to_bytes((plaintext_int.bit_length() + 7) // 8, 'big')
+    plaintext_bytes = int_to_bytes(plaintext_int)
     return plaintext_bytes
 
 def create_db(msg_bytes):
@@ -260,13 +240,7 @@ def encrypt_rsa(msg_int, n, e):
     Output cipher_bytes (String e.g  b'\xa9z\xb7\xf3\')
     '''
     cipher_int = pow(msg_int, int(e), int(n))
-    cipher_bytes = cipher_int.to_bytes((cipher_int.bit_length() + 7) // 8, 'big')
-    #print('bin: ', bin(cipher_int))
-    #print('cipher_btes_1: ', cipher_bytes)
-    
-    #print('cipher_int: ', cipher_int)
-    #cipher_bytes = int_to_bytes(cipher_int)
-    # cipher = str(cipher_bytes, 'utf-8')
+    cipher_bytes = int_to_bytes(cipher_int)
     return cipher_bytes
 
 '''
@@ -390,30 +364,3 @@ class HTTP_message:
 
 
 
-
-
-
-# original payload to binary function - replaced by byte_to_bits
-# def convert_payload_binary(data):
-#     '''
-#     Input: array of hex (bytearray)
-#     Output: string of binary (1s and 0s)
-#     '''
-#     #print('data')
-#     #print(data)
-
-#     con = ''
-#     databits = []
-#     for i in data:
-#         integer = int(i)
-#         binary = bin(integer)
-#         binary = binary[2:]
-#         if len(binary) < 8:             #pad with zero if bits are less than zero -> ?? need to do that or no
-#             pad = 8 - len(binary)
-#             zeros = ''
-#             for i in range(pad):
-#                 zeros = zeros+'0'
-#             binary = zeros+binary
-#         databits.append(binary) 
-#         con = con + binary
-#     return con

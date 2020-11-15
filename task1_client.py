@@ -1,6 +1,7 @@
 import socket
 import select
 import math
+from type_conversions import bytes_to_bits
 
  
 def main():
@@ -47,7 +48,7 @@ def main():
     # extract output content - comes after \r\n\r\n
  
     # 2. Resolve hamming code on payload
-    databits = convert_payload_binary(payload)       #makes payload into binary
+    databits = bytes_to_bits(payload)       #makes payload into binary
     print('binary payload: ', databits, len(databits))
 
     corrected_databits = hamming(databits)
@@ -89,30 +90,6 @@ def extract_marks(data):
         print('total:', total)
         n = n + 1
     
-
-def convert_payload_binary(data):
-    '''
-    Input: array of hex (bytearray)
-    Output: string of binary (1s and 0s)
-    '''
-    #print('data')
-    #print(data)
-
-    con = ''
-    databits = []
-    for i in data:
-        integer = int(i)
-        binary = bin(integer)
-        binary = binary[2:]
-        if len(binary) < 8:             #pad with zero if bits are less than zero -> ?? need to do that or no
-            pad = 8 - len(binary)
-            zeros = ''
-            for i in range(pad):
-                zeros = zeros+'0'
-            binary = zeros+binary
-        databits.append(binary) 
-        con = con + binary
-    return con
  
 
 #DYNAMIC HAMMING DECODER
@@ -208,21 +185,6 @@ def hamming (input):
 
     return str_bin
     
-def int_to_Bytes(integer):
-    '''
-    input: int
-    output: list of bytes(binary) - WHAT IF NOT DIVISIBLE BY 8????
-    '''
-
-    binary = bin(integer)       #return binary of integers in string format 
-    binary = binary[2:]         #chop off the first two element (0b)
-
-    list_of_bytes = []          #will contain whole binary into list of 8bits (string)
-    n = 8
-    list_of_bytes = [binary[i:i+8] for i in range(0, len(binary), n)]
-    print(list_of_bytes)
-        
-    return list_of_bytes
 
 def decrypt_rsa(cipher_int, n, d):
     #cipher_int = int.from_bytes(cipher_bytes, byteorder='big') # convert cipher to integer form

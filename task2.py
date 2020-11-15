@@ -3,6 +3,8 @@ import select
 import json
 import struct
 from utility import *
+import time
+
 
 '''
 task 2 server
@@ -75,7 +77,7 @@ def main():
     # msg_bin = convert_payload_binary(msg)
     corrected_msg = hamming(msg_bin)
     corrected_msg = int(corrected_msg, 2)
-    msg_bytes = corrected_msg.to_bytes((corrected_msg.bit_length() + 7) // 8, 'big')
+    msg_bytes = int_to_bytes(corrected_msg)
 
     decrypt_msg = decrypt_rsa(msg_bytes, N, d)
 
@@ -107,52 +109,18 @@ def main():
     '''
     5. Encrypt with rsa
     '''
-    send_byte = encrypt_rsa(hamming_int, N, e)
-    print('to send: ', send_byte)
+    modified_msg = encrypt_rsa(hamming_int, N, e)
+    print('to send: ', modified_msg)
 
     '''
     6. construct response and sent to user
     '''
-    response.set_content(send_byte)
+    response.set_content(modified_msg)
     print('full response string:', response.as_string())
     
 
 
-
-def bytes_to_int(byte):
-    print('in bytes->int')
-    fin = ""
-    print(len(byte))
-    for i in byte:
-        binary = bin(i)
-        binary = binary[2:]
-        fin = fin + binary.zfill(8) 
-    print(fin, len(fin))
-
-    integer = int(fin, 2)
-    print('integer: ', integer)
-
-
-    return integer
-
-def int_to_bytes(integer):
-    '''
-    input: int
-    output: list of bytes(binary) - WHAT IF NOT DIVISIBLE BY 8????
-    '''
-
-    binary = bin(integer)       #return binary of integers in string format 
-    binary = binary[2:]         #chop off the first two element (0b)
-
-    print('bin: ', integer)
-    list_of_bytes = []          #will contain whole binary into list of 8bits (string)
-    n = 8
-    list_of_bytes = [binary[i:i+8] for i in range(0, len(binary), n)]
-
-    print('list of bytes: ', list_of_bytes)
-        
-    return list_of_bytes
-    
-
 if __name__ == '__main__':
+    start_time = time.time()
     main()
+    print("--- %s seconds ---" % (time.time() - start_time)) # run time check
