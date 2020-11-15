@@ -22,9 +22,9 @@ Questions:
 
 def main():
     # these values will be recieved from client
-    N = 252837207378338387332619197259204540353
-    e = 65537
-    d = 48393883292703003300067554859838128129
+    #N = 119484048255701441436361811740544499805482989972762171328000832460793482937842746490520045389267019914879180293493128527411951756175646012207372245640392613181330180655929701724130504407998065166504932760922418859359543355490102783596328490356612554010085829097705629454807851698735754870179265036374094717849
+    #e = 65537
+    #d = 98169554028663195074268552344192732906999665503049451108954221656222986744450928903192736378388878867457838199542716308146908681554447642908863140933908360961506320097008245680412967700092994045241465985522036307059609765358467340869704010033821712100383554558800942218221868532481354259885666372749501435361
 
     HOST = '149.171.36.192'
     PORT_client = 12275
@@ -60,6 +60,9 @@ def main():
     N_client = int(payload_split[0])
     e_client = int(payload_split[1])
 
+    print("n:", N_client)
+    print("e:", e_client)
+
 
 
 
@@ -68,7 +71,6 @@ def main():
     '''
 
     
-
     msg = get_data_from_db(HOST, PORT_db, N, e, d)
     msg_bin = convert_payload_binary(msg)
     corrected_msg = hamming(msg_bin)
@@ -88,29 +90,31 @@ def main():
     '''
     2. Alter database
     '''
-    db.change_marks()
+    #db.change_marks()
     #print('after: ', db.json())
 
     '''
     3. Convert db to bytes
     '''
-    changed_bytes = db_to_bytes(db)
+    #changed_bytes = db_to_bytes(db)
 
     '''
     4. Hamming encode
     '''
-    hamming_bin = hamming_encode(changed_bytes)
-    hamming_int = int(hamming_bin)
+    #hamming_bin = hamming_encode(changed_bytes)
+    #hamming_int = int(hamming_bin)
 
     '''
     5. Encrypt with rsa
     '''
-    send_byte = encrypt_rsa(hamming_int, N, e)
-    print('to send: ', send_byte)
+    #send_byte = encrypt_rsa(hamming_int, N_client, e_client)
+    #print('to send: ', send_byte)
 
     '''
     6. construct response and sent to user
     '''
+
+
     
     
 

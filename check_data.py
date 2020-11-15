@@ -27,6 +27,10 @@ def main():
 
     print(response)
 
+    #print(repr(response))
+    print(response)
+
+
 if __name__ == '__main__':
     main()
  
