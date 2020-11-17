@@ -94,7 +94,7 @@ def main():
     2. Alter database
     '''
     db.change_marks()
-    #print('after: ', db.json())
+    print('after: ', db.json())
 
     '''
     3. Convert db to bytes
