@@ -98,7 +98,6 @@ def extract_marks(data):
    
 
 
-
  
 if __name__ == '__main__':
     main()

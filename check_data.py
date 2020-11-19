@@ -1,3 +1,7 @@
+'''
+Dummy file to get samples 
+'''
+
 import socket
 import select
 def main():
@@ -5,7 +9,7 @@ def main():
     # 1. Send well-formed HTTP requests
     HOST = '149.171.36.192'
     PORT = 12000
-    content = '4,3'
+    content = '4,100'
  
     # HTTP request headers
     #request = 'GET / HTTP/1.1\r\nHost: ' + HOST + '\r\nContent-Length: ' + str(len(content)) + '\r\n\r\n' + content

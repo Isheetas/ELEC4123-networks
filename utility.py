@@ -97,6 +97,10 @@ class Database:
         # stu = self.sample[0]
         # stu.change_marks()
 
+    def print(self):
+        for student in self.sample:
+            student.print()
+
     def json(self):
         return json.dumps(self.as_dict())
 
@@ -156,6 +160,15 @@ class Student:
         ret = bytes(self.student_name) + bytes(self.mark_task1) + bytes(self.mark_task2) \
                 + bytes(self.mark_task3) + bytes(self.mark_task4) + bytes(self.mark_total)
         return ret
+    
+    def print(self):
+        print("name:", str(self.student_name), end = ' ')
+        print("t1:", int(self.mark_task1), end = ' ')
+        print("t2:", int(self.mark_task2), end = ' ')
+        print("t3:", int(self.mark_task3), end = ' ')
+        print("t4:", int(self.mark_task4), end = ' ')
+        print("total:", int(self.mark_total))
+        
 
 
 
