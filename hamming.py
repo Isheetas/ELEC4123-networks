@@ -14,7 +14,8 @@ def hamming_decode (input):
     numParity = math.log(n, 2) + 1
     numParity = math.floor(numParity)
     
-    #print('parity: ', numParity, n)
+    
+    print('parity: ', numParity, n)
 
 
     data = input[::-1]          #flip data 
@@ -79,10 +80,6 @@ def hamming_decode (input):
     output = output[::-1]
     #print("ouptut before rem: ", "".join(output), len(output))
 
-    if (len(output) > 256):
-        rem_bits = len(output) - 256
-        #print('rem_bits: ', rem_bits)
-        output = output[rem_bits:]
     
 
     # convert list output to string
