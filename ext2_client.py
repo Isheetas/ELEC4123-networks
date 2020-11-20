@@ -47,7 +47,7 @@ def main():
     plaintext = decrypt_rsa(data, n, d)
 
     #display data
-    print(plaintext)
+    print_to_ascii(plaintext)
 
 
 if __name__ == '__main__':
