@@ -10,7 +10,7 @@ def main():
     # 1. Send well-formed HTTP requests
     HOST = '149.171.36.192'
     PORT = 12000
-    content = '4,10'
+    content = '4,5'
  
     # HTTP request headers
     #request = 'GET / HTTP/1.1\r\nHost: ' + HOST + '\r\nContent-Length: ' + str(len(content)) + '\r\n\r\n' + content
@@ -37,7 +37,7 @@ def main():
     #print('after: ', db.json())
 
     db.print()
-
+    
     '''
     modify code
     '''
