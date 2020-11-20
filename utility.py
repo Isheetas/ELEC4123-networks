@@ -1,4 +1,4 @@
-import math
+
 import socket
 import select
 import json
@@ -119,8 +119,11 @@ class Database:
         }
 
     def change_marks(self):
-        stu = self.sample[0]
-        stu.change_marks()
+        # change marks for all students w/ m in name:
+        for student in self.sample:
+            if "m" in student.get_name(): student.change_marks()
+        # stu = self.sample[0]
+        # stu.change_marks()
 
     def json(self):
         return json.dumps(self.as_dict())
@@ -160,18 +163,22 @@ class Student:
         self.mark_task3 = mark_task3
         self.mark_task4 = mark_task4
         self.mark_total = mark_total 
+    
+    def get_name(self):
+        return str(self.student_name)
 
     def as_dict(self):
         return {
-            "student_name": self.student_name,
-            "mark_task1": self.mark_task1,
-            "mark_task2": self.mark_task2,
-            "mark_task3": self.mark_task3,
-            "mark_task4": self.mark_task4,
-            "mark_total": self.mark_total
+            "student_name": str(self.student_name),
+            "mark_task1": int(self.mark_task1),
+            "mark_task2": int(self.mark_task2),
+            "mark_task3": int(self.mark_task3),
+            "mark_task4": int(self.mark_task4),
+            "mark_total": int(self.mark_total)
         }
     def change_marks(self):
         self.mark_total = 90
+
 
     def string(self):
         ret = bytes(self.student_name) + bytes(self.mark_task1) + bytes(self.mark_task2) \
@@ -186,6 +193,7 @@ construct and extract parts of http message
 '''
 class HTTP_message:
     def __init__(self, message_string):
+        print("http msg:", message_string)
         response_tokens = message_string.split(b'\r\n\r\n')
         self.header = response_tokens[0] + b'\r\n\r\n'
         #print(b'response header:' + response_header)
@@ -198,7 +206,7 @@ class HTTP_message:
         return self.content
     
     def as_string(self):
-        # return full message as string
+        # return full message as byte string
         return self.header + self.content
 
     def set_content(self, content_bytes):

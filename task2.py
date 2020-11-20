@@ -3,6 +3,7 @@ import select
 import json
 import struct
 from utility import *
+from type_conversions import *
 import time
 
 
@@ -23,30 +24,6 @@ Questions:
 
 '''
 
-'''
-N = 252837207378338387332619197259204540353
-e = 65537
-d = 48393883292703003300067554859838128129
-
-N = 63148583107154283585608284940392418734726981382069355868003882013090711003369
-e = 65537
-d = 51783437651169347215431900289402465246791119526563008636281618633074802696377
-
-N = 8970390971863115293607640428673687999254972927235154691542229862779928818191497867276608223970519838284414340107378134391857351696176024011425314547707437
-e = 65537
-d = 2691514229682718145986246568952490971777008218886309746471251476596495417130742890415399202072710693207354976533556735077478241083226230682882713819251905
-
-N = 119484048255701441436361811740544499805482989972762171328000832460793482937842746490520045389267019914879180293493128527411951756175646012207372245640392613181330180655929701724130504407998065166504932760922418859359543355490102783596328490356612554010085829097705629454807851698735754870179265036374094717849
-e = 65537
-d = 98169554028663195074268552344192732906999665503049451108954221656222986744450928903192736378388878867457838199542716308146908681554447642908863140933908360961506320097008245680412967700092994045241465985522036307059609765358467340869704010033821712100383554558800942218221868532481354259885666372749501435361
-
-N = 22946363129994826577290485132048269530367907435865564505398980418770939980335605558922215490228827703369553743626870315255204846515969276672521953249260400066138871749246384596075747255554938943120569769420923823686164862968767839306248417957032703462245871947555296177875829693435733439160109407765234856561636468093388251400122393226115460553654948341945632248422505234342191276574649191089998930866384791495629609740703256945567786500796606036156932805990473521378549032729928164863421133267054266084277047689600401729486564350762792635097639715603761556993068515886895509613259566547005980540352656342746261262537
-e = 65537
-d = 252792684740776428411488628795014275919337613389305851242779862708891445531567011208047966552408770646090266611205889308547200805415716583877212112943314598589381042814835736734465866892147426902864814891159299337800189680080723560417952572821118023402681226576360282594966950557099036316459261436754634731889905201747103851611449210570319678170771358908293749523108746287938161045351335725021400509975663317393973710483203568059596657971449782305265385988995877764594815999847585302822520276427822531443733852892804878775517133081958601862663391675487488874170650718742484619889643980014838982209372664534895730689
-
-
-
-'''
 
 def main():
     # these values will be recieved from client
@@ -57,16 +34,15 @@ def main():
 
     
 
-    '''
-    -1. Get data from arash's client
-    '''
+    
+    #1. Get data from arash's client
+    
     try: 
         s_client = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
         print ("Socket successfully created to Arash")
     except socket.error as err: 
         print ("socket creation failed with error %s to Arash" %(err))
     s_client.connect((HOST, PORT_client))
-    #s_client.send (req_bytes)
 
     ready = select.select([s_client], [], [], 10)
     if ready[0]:
@@ -77,7 +53,6 @@ def main():
 
     response_tokens = response.split(b'\r\n\r\n')
     response_header = response_tokens[0] + b'\r\n\r\n'
-    #print(b'response header:' + response_header)
     payload = str(response_tokens[1])
     payload = payload[2:len(payload)-1]
     
@@ -86,92 +61,88 @@ def main():
     N_client = int(payload_split[0])
     e_client = int(payload_split[1])
 
-    print("n:", N_client)
-    print("e:", e_client)
+    #print("n:", N_client)
+    #print("e:", e_client)
 
     key_size = len(str(bin(N_client))) -2
 
-    #N, e, d = set_key(key_size)
+    N, e, d = set_key(key_size)             #depending on key size - choose our N and e to send to database
 
-    N = 119484048255701441436361811740544499805482989972762171328000832460793482937842746490520045389267019914879180293493128527411951756175646012207372245640392613181330180655929701724130504407998065166504932760922418859359543355490102783596328490356612554010085829097705629454807851698735754870179265036374094717849
-    e = 65537
-    d = 98169554028663195074268552344192732906999665503049451108954221656222986744450928903192736378388878867457838199542716308146908681554447642908863140933908360961506320097008245680412967700092994045241465985522036307059609765358467340869704010033821712100383554558800942218221868532481354259885666372749501435361
 
+
+    #2. send request to database with YOUR set key and get message
     
-
-    #depending on key size - choose our N and e to send to database
-
-
-    '''
-    0. send request to client (db?) and get message
-    '''
-
-    
-    # return message header for future use as we
     response = get_data_from_db(HOST, PORT_db, N, e, d)
     msg = response.get_content()
-    msg_bin = bytes_to_bits(msg)
-    # msg_bin = convert_payload_binary(msg)
-    corrected_msg = hamming_decode(msg_bin)
+    header = response.get_header()                              # return message header for future use as we
+
+    corrected_msg = hamming_decode(msg)
     corrected_msg = int(corrected_msg, 2)
 
-    # decrypt_msg = decrypt_rsa(msg_bytes, N, d)
     decrypt_msg = decrypt_rsa(corrected_msg, N, d)
 
-    print('dec msg: ', decrypt_msg)
 
-    '''
-    1. Create a database class
-    '''
+    #1. Create database class
     db = create_db(decrypt_msg)
     #print('before: ', db.json())
 
-    '''
-    2. Alter database
-    '''
-    #db.change_marks()
+    
+    #2. Alter database
+    db.change_marks()
     #print('after: ', db.json())
 
-    '''
-    3. Convert db to bytes
-    '''
-    changed_bytes = db.get_bytes()
+    #3. Convert db to bytes
+    changed_bytes = db.get_bytes()       
 
-    '''
-    4. Hamming encode
-    '''
-    hamming_bin = hamming_encode(changed_bytes)
-    hamming_int = int(hamming_bin)
 
-    '''
-    5. Encrypt with rsa
-    '''
-    modified_msg = encrypt_rsa(hamming_int, N_client, e_client)
-    print('to send: ', modified_msg, len(modified_msg))
+    #4. encrypt with rsa
+    changed_int = int.from_bytes(changed_bytes, byteorder='big')
+    enc_msg_bytes = encrypt_rsa(changed_int, N, e)          #change it to N_client, and e_client BEFORE SUBMITTING
 
-    '''
-    6. construct response and sent to user
-    '''
-    response.set_content(modified_msg)
-    print('full response string:', response.as_string())
 
-    '''
-    7. Verification - decrypt modified message
-    '''
-    t_hamming = hamming_decode(modified_msg)
-    t_hamming_int = int(t_hamming)
+    
+    #5. Hamming encode
+    hamm_msg_bin = hamming_encode(enc_msg_bytes)
+    hamm_msg_byte = bits_to_bytes(hamm_msg_bin)
+    print("to send bytes:", hamm_msg_byte, len(hamm_msg_byte))
+
+    
+    #6. send to Arash's client
+    
+    print("header:", str(header) + str(hamm_msg_byte))
+    print("")
+    to_send = str(header) + str(hamm_msg_byte)
+
+    request_bytes =  bytes(to_send, 'utf-8') 
+    try: 
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
+        print ("Socket successfully created")
+    except socket.error as err: 
+        print ("socket creation failed with error %s" %(err))
+    
+    
+    s.connect((HOST, PORT_client))
+    s.send (request_bytes)
+    
+    #ready = select.select([s], [], [], 10)
+    #if ready[0]:
+    #    response = s.recv(64000)
+    #    print("from arash after sending:", response)
+
+    s.close()
+
+    
+
+
+    #VERIFICATION
+    t_hamming = hamming_decode(hamm_msg_byte)
+    t_hamming_int = int(t_hamming,2)
     t_decrypt = decrypt_rsa(t_hamming_int, N, d)
+    print("Verify:", t_decrypt)
     
 
 
-    
-    
 
-
-
-
-
-    
 
 
 if __name__ == '__main__':
