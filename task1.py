@@ -57,7 +57,7 @@ def main():
     databits = bytes_to_bits(payload)       #makes payload into binary
     print('binary payload: ', databits, len(databits))
 
-    corrected_databits = hamming_decode(databits)
+    corrected_databits = hamming_decode(payload)
     print('corrected: ', corrected_databits, ' ', len(corrected_databits))
   
 
