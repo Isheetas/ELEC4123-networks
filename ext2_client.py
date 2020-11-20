@@ -1,5 +1,6 @@
 #client for extension task 1
 import socket
+import time
 def decrypt_rsa(cipher_bytes, n, d):
     # message to decrypt will always be a multiple of 16
     plaintext_bytes_temp = b''
@@ -23,33 +24,40 @@ def int_to_bytes(integer_val):
     return integer_val.to_bytes((integer_val.bit_length() + 7) // 8, 'big')
 
 
+def main():
+    #send request to task3_server
+    HOST = '127.0.0.1'
+    PORT = 3000
+    #host = 'localhost'
 
-#send request to task3_server
-HOST = '127.0.0.1'
-PORT = 3000
-#host = 'localhost'
+    #request = 'GET / HTTP/1.1\r\nHost: ' + host + '\r\nContent-Length: ' + str(len(content)) + '\r\n\r\n' + content
+    #client sends 'n,e'
+    n = '252837207378338387332619197259204540353'
+    d = '48393883292703003300067554859838128129'
+    request = '252837207378338387332619197259204540353,65537'
+    request_bytes = bytes(request, 'utf-8')
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        print("Socket successfully created")
+    except socket.error as err:
+        print("socket creation failed with error %s" % (err))
 
-#request = 'GET / HTTP/1.1\r\nHost: ' + host + '\r\nContent-Length: ' + str(len(content)) + '\r\n\r\n' + content
-#client sends 'n,e'
-n = '252837207378338387332619197259204540353'
-d = '48393883292703003300067554859838128129'
-request = '252837207378338387332619197259204540353,65537'
-request_bytes = bytes(request, 'utf-8')
-try:
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    print("Socket successfully created")
-except socket.error as err:
-    print("socket creation failed with error %s" % (err))
+    s.connect((HOST, PORT))
+    s.send(request_bytes)
 
-s.connect((HOST, PORT))
-s.send(request_bytes)
+    data = s.recv(1024)
+    s.close()
+    print('Received', repr(data))
 
-data = s.recv(1024)
-s.close()
-print('Received', repr(data))
+    #decrypt data
+    plaintext = decrypt_rsa(data, n, d)
 
-#decrypt data
-plaintext = decrypt_rsa(data, n, d)
+    #display data
+    print(plaintext)
 
-#display data
-print(plaintext)
+
+if __name__ == '__main__':
+    start_time = time.time()
+    main()
+    print("--- %s seconds ---" % (time.time() - start_time)) # run time check
+ 
