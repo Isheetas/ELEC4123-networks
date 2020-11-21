@@ -39,7 +39,7 @@ def main():
     s.send(request_bytes)
     data = s.recv(1024)
     s.close()
-    #print('Received', repr(data))
+    print('Received', repr(data))
 
     '''
     Decrypt recieved data
