@@ -22,12 +22,18 @@ def encrypt_rsa(msg_bytes, n, e):
     cipher_bytes_temp = b''
     cipher_bytes = b''
     start = 0
+    print('ENCRYPTION PROCESS')
     while start < len(msg_bytes):
         end = start + 16
+        print('msg_bytes[start:end]', start, end,msg_bytes[start:end])
         msg_int = int.from_bytes(msg_bytes[start:end], byteorder='big')
         cipher_int = pow(msg_int, int(e), int(n))
+        print('cipher_int:', cipher_int)
         cipher_bytes_temp = int_to_bytes(cipher_int)
-        cipher_bytes = cipher_bytes + cipher_bytes_temp
+        padding = 16 - len(cipher_bytes_temp) 
+        cipher_bytes = cipher_bytes + bytes(padding) + cipher_bytes_temp
+        print('cipher, len', cipher_bytes_temp, len(cipher_bytes_temp))
+        #print('cipher_full', cipher_bytes)
         start = end
     return cipher_bytes
 
@@ -38,8 +44,9 @@ def int_to_bytes(integer_val):
     input: int
     output: list of bytes(binary)
     '''
+    
+    #print('padding', padding)
     return integer_val.to_bytes((integer_val.bit_length() + 7) // 8, 'big')
-
 
 def print_to_ascii(msg_bytes):
     n_entries = msg_bytes[0]
