@@ -11,13 +11,13 @@ def get_data_from_db(host, port, N, e, d):
     
 
     content = str(N) + "," + str(e)
-    print('content: ', content)
+    #print('content: ', content)
     # HTTP request headers
     request = 'GET / HTTP/1.1\r\nHost: ' + host + '\r\nContent-Length: ' + str(len(content)) + '\r\n\r\n' + content
     request_bytes =  bytes(request, 'utf-8') 
     try: 
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
-        print ("Socket successfully created")
+        print ("Socket successfully created to demo db")
     except socket.error as err: 
         print ("socket creation failed with error %s" %(err))
     
@@ -32,8 +32,22 @@ def get_data_from_db(host, port, N, e, d):
 
     s.close
 
-    return HTTP_message(recieved)
-    
+
+    return split_http_message(recieved)
+
+
+def split_http_message(message_bytes):
+    '''
+    split header & content bytes
+    return as dict w/ 'header': header bytestring 'content': content bytestring
+    '''
+    msg_tokens = message_bytes.split(b'\r\n\r\n')
+    header = msg_tokens[0] + b'\r\n\r\n'
+        #print(b'response header:' + response_header)
+    content = msg_tokens[1]
+    return {'header': header, 'content': content}
+
+
 def set_key(size):
 
     tup_128 = (252837207378338387332619197259204540353,65537,48393883292703003300067554859838128129)
@@ -106,13 +120,7 @@ def create_db(msg_bytes):
         t4 = msg_bytes[start+8]
         total = msg_bytes[start+9]
         db.add_student(Student(name, t1, t2, t3, t4, total))
-        print('name:', name, end = ' ')
-        print('t1: ',  t1, end = ' ')
-        print('t2: ', t2, end = ' ')
-        print('t3: ', t3, end = ' ')
-        print('t4: ', t4, end = ' ')
-        print('total: ', total)
-        # next five bytes form name
+
 
         n += 1
 
@@ -214,7 +222,6 @@ class Student:
 
     
     def change_marks(self, new_total):
-        print("name change:")
         self.total = new_total
         # weighted distribution of new marks between 4 tasks
 
@@ -242,37 +249,6 @@ class Student:
         print("t4:", self.t4, end = ' ')
         print("total:", self.total)
         
-
-
-
-''' 
-http message class
-construct and extract parts of http message
-'''
-class HTTP_message:
-    def __init__(self, message_string):
-        print("http msg:", message_string)
-        response_tokens = message_string.split(b'\r\n\r\n')
-        self.header = response_tokens[0] + b'\r\n\r\n'
-        #print(b'response header:' + response_header)
-        self.content = response_tokens[1]
-    
-    def get_header(self):
-        return self.header
-    
-    def get_content(self):
-        return self.content
-    
-    def as_string(self):
-        # return full message as byte string
-        return self.header + self.content
-
-    def set_content(self, content_bytes):
-        self.content = content_bytes
-        '''
-        input: hex_string of content bytes
-        '''
-        # update content part of message
 
 
 
