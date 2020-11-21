@@ -55,6 +55,9 @@ while True:
     #hammingsplitint = int(''.join(hammingsplit), 2)
     print(encoded)
 
+    #RESEND CODE: LISTEN FOR "resend" CLIENT MESSAGE RERUN encoded THROUGH NOISE SERVER
+
+
     #send bytes to noise server
     try:
         s_noise = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -77,14 +80,6 @@ while True:
     conn.sendall(noiseResponse)
 
 
-#CODE TO BE INSERTED
 
-    # # encode with hamming and additional parity bit
-    # hammingsplit = []
-    # i = 0
-    # while (i < len(splitresponse)):
-    #     hammingsplit.append(hamming_encode(splitresponse[i], 1))
-    #     i = i + 1
-    # hammingsplitint = int(''.join(hammingsplit), 2)
 
 

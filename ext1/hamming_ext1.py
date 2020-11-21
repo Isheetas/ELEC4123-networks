@@ -11,6 +11,7 @@ def hamming_decode(input, extraparity):
     # input = '011100101110'         #test input
 
     # caluclate number of parity bits
+    print(input)
     if extraparity:
         #input = bytes_to_bits(input)
         extrabit = int(input[0])
@@ -25,6 +26,7 @@ def hamming_decode(input, extraparity):
     while 2 ** numParity < n + 1:
         numParity = numParity + 1
     data = input[::-1]  # flip data
+    print(data)
     output = list(data)
     errorDetect = []
 
