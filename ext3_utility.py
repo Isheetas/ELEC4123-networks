@@ -5,7 +5,6 @@ import struct
 from type_conversions import *
 from rsa import *
 from hamming import *
-import statistics
 
 def get_data_from_db(host, port, N, e, d):
     
@@ -51,12 +50,12 @@ def create_db(msg_bytes):
         t4 = msg_bytes[start+8]
         total = msg_bytes[start+9]
         db.add_student(Student(name, t1, t2, t3, t4, total))
-        #print('name:', name, end = ' ')
-        #print('t1:',  t1, end = ' ')
-        #print('t2:', t2, end = ' ')
-        #print('t3:', t3, end = ' ')
-        #print('t4:', t4, end = ' ')
-        #print('total:', total)
+        print('name:', name, end = ' ')
+        print('t1: ',  t1, end = ' ')
+        print('t2: ', t2, end = ' ')
+        print('t3: ', t3, end = ' ')
+        print('t4: ', t4, end = ' ')
+        print('total: ', total)
         # next five bytes form name
 
         n += 1
@@ -106,15 +105,6 @@ class Database:
         # stu.change_marks()
         
 
-    def get_marks_to_change(self):
-        i = 0
-        for student in self.sample:
-            if "m" in student.get_name(): 
-                return i
-            i += 1
-        return 0
-
-
     def print(self):
         
         for student in self.sample:
@@ -129,7 +119,8 @@ class Database:
         i = 0
         msg_byte[i] =  self.n_entries
         i += 1
-        #print(msg_byte)
+        #msg_str = msg
+        print(msg_byte)
 
         for stu in self.sample:
             for n in str(stu.name, 'utf-8'):
@@ -145,29 +136,9 @@ class Database:
             i += 1
             msg_byte[i] = stu.mark_total
             i += 1
-            #print(msg_byte)
+            print(msg_byte)
 
         return msg_byte
-
-    def get_stdev(self):
-        total_marks = []
-        for stu in self.sample:
-            total_marks.append(stu.mark_total)
-        return statistics.stdev(total_marks)
-    
-    def get_mean(self):
-        total_marks = []
-        for stu in self.sample:
-            total_marks.append(stu.mark_total)
-        return statistics.mean(total_marks)
-
-    def get_total_marks(self):
-        total_marks = []
-        for stu in self.sample:
-            total_marks.append(stu.mark_total)
-        return total_marks
-        
-
 
 class Student:
     def __init__(self, name, t1, t2, t3, t4, mark_total):

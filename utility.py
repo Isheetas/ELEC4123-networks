@@ -121,7 +121,7 @@ class Database:
     def change_marks(self):
         # change marks for all students w/ m in name:
         for student in self.sample:
-            if "m" in student.get_name(): student.change_marks()
+            if "m" in student.get_name(): student.change_marks(90)
         # stu = self.sample[0]
         # stu.change_marks()
 
@@ -142,60 +142,81 @@ class Database:
         #print(msg_byte)
 
         for stu in self.sample:
-            for n in stu.student_name:
+            for n in bytes(stu.name, 'utf-8'):
                 msg_byte[i] = n
                 i += 1
-            msg_byte[i] = stu.mark_task1
+            
+            print(i)
+            print(stu.t1)
+            msg_byte[i] = stu.t1
             i += 1
-            msg_byte[i] = stu.mark_task2
+            print(i)
+            msg_byte[i] = stu.t2
             i += 1
-            msg_byte[i] = stu.mark_task3
+            print(i)
+            msg_byte[i] = stu.t3
             i += 1
-            msg_byte[i] = stu.mark_task4
+            print(i)
+            msg_byte[i] = stu.t4
             i += 1
-            msg_byte[i] = stu.mark_total
+            print(i)
+            msg_byte[i] = stu.total
             i += 1
             #print(msg_byte)
 
         return msg_byte
 
 class Student:
-    def __init__(self, name, mark_task1, mark_task2, mark_task3, mark_task4, mark_total):
-        self.student_name= name
-        self.mark_task1 = mark_task1
-        self.mark_task2 = mark_task2
-        self.mark_task3 = mark_task3
-        self.mark_task4 = mark_task4
-        self.mark_total = mark_total 
+    def __init__(self, name, t1, t2, t3, t4, mark_total):
+        self.name= str(name, 'utf-8')
+        self.t1 = int(t1)
+        self.t2 = int(t2)
+        self.t3 = int(t3)
+        self.t4 = int(t4)
+        self.total = int(mark_total) 
     
     def get_name(self):
-        return str(self.student_name)
+        return str(self.name)
 
     def as_dict(self):
         return {
-            "student_name": str(self.student_name),
-            "mark_task1": int(self.mark_task1),
-            "mark_task2": int(self.mark_task2),
-            "mark_task3": int(self.mark_task3),
-            "mark_task4": int(self.mark_task4),
-            "mark_total": int(self.mark_total)
+            "name": self.name,
+            "t1": self.t1,
+            "t2": self.t2,
+            "t3": self.t3,
+            "t4": self.t4,
+            "mark_total": self.total
         }
-    def change_marks(self):
-        self.mark_total = 90
+
+    
+    def change_marks(self, new_total):
+        print("name change:")
+        self.total = new_total
+        # weighted distribution of new marks between 4 tasks
+
+        # max 25
+        self.t1 = self.t1*int(0.25*new_total)
+        # max 15
+        self.t2 = self.t2*int(0.15*new_total)
+        # max 10
+        self.t4 = self.t4*int(0.1*new_total)
+        # max 50
+        self.t3 = new_total = self.t1 - self.t2 - self.t4
+
 
 
     def string(self):
-        ret = bytes(self.student_name) + bytes(self.mark_task1) + bytes(self.mark_task2) \
-                + bytes(self.mark_task3) + bytes(self.mark_task4) + bytes(self.mark_total)
+        ret = bytes(self.name) + bytes(self.t1) + bytes(self.t2) \
+                + bytes(self.t3) + bytes(self.t4) + bytes(self.t3)
         return ret
     
     def print(self):
-        print("name:", str(self.student_name), end = ' ')
-        print("t1:", int(self.mark_task1), end = ' ')
-        print("t2:", int(self.mark_task2), end = ' ')
-        print("t3:", int(self.mark_task3), end = ' ')
-        print("t4:", int(self.mark_task4), end = ' ')
-        print("total:", int(self.mark_total))
+        print("name:", str(self.name), end = ' ')
+        print("t1:", self.t1, end = ' ')
+        print("t2:", self.t2, end = ' ')
+        print("t3:", self.t3, end = ' ')
+        print("t4:", self.t4, end = ' ')
+        print("total:", self.total)
         
 
 

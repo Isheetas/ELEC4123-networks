@@ -1,45 +1,13 @@
 # create server and client
 import socket
 import select
+from ext2_utility import *
 
 
-def main():
-
-    #CREATE SERVER
-    HOST = '127.0.0.1'
-    PORT = 3000
-    HOST_server = '149.171.36.192'
-    PORT_d = 12000
-
-
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
-    s.bind((HOST, PORT))
-    s.listen(5)
-
-    conn, addr = s.accept()
-    print(f"Connection from {addr} has been established.")
-
-    while True:
-
-        try:
-            data = conn.recv(1024)
-
-            if not data: break
-            print("Client says: ")
-            print(data)
-            conn.close()
-
-        except socket.error:
-            print ("Error Occured.")
-            break
-
-
-
-    #Request message from data server
-    content = '4,3'
+def get_student_payload(HOST_server, PORT_d, n_students):
+        #Request message from data server
+    content = '4,' + str(n_students) 
     request_bytes =  bytes(content, 'utf-8')
-
 
     try:
         s_data = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -58,51 +26,53 @@ def main():
     s_data.close()
 
     print(response)
-
-    #encrypt with rsa
-    #payload = data.split('b')
-
-
-    payload = str(data)
-    payload = payload[2:len(payload)-1]
-    payload_split = payload.split(',')
-    n = int(payload_split[0])
-    print(n)
-    e = int(payload_split[1])
-    print(e)
-    cipher = encrypt_rsa(response, n, e)    
-    print(response)
-
-    #send noisy payload to client
-    conn.sendall(response)
-
-def encrypt_rsa(msg_bytes, n, e):
-    '''
-    Encrypt with RSA
-    Input plaintext (String e.g 'Hello') - payload to encrypt as a text string, n(String), e(String)
-    Output cipher_bytes (String e.g  b'\xa9z\xb7\xf3\')
-    '''
-    cipher_bytes_temp = b''
-    cipher_bytes = b''
-    start = 0
-    while start < len(msg_bytes):
-        end = start + 16
-        msg_int = int.from_bytes(msg_bytes[start:end], byteorder='big')
-        cipher_int = pow(msg_int, int(e), int(n))
-        cipher_bytes_temp = int_to_bytes(cipher_int)
-        cipher_bytes = cipher_bytes + cipher_bytes_temp
-        start = end
-    return cipher_bytes
+    return response
 
 
 
-def int_to_bytes(integer_val):
-    '''
-    input: int
-    output: list of bytes(binary)
-    '''
-    return integer_val.to_bytes((integer_val.bit_length() + 7) // 8, 'big')
+def main():
+    #CREATE SERVER
+    HOST = '127.0.0.1'
+    PORT = 3000
+    HOST_data_server = '149.171.36.192'
+    PORT_data_server = 12000
+
+
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+    s.bind((HOST, PORT))
+    s.listen(5)
+    while True:
+
+        conn, addr = s.accept()
+        print(f"Connection from {addr} has been established.")
+        
+        '''
+        1. get public keys from client
+        '''  
+        key = conn.recv(1024)
+        key = str(key)
+        key = key[2:len(key)-1]
+        key_split = key.split(',')
+        n = int(key_split[0])
+        #print(n)
+        e = int(key_split[1])
+        #print(e)
+
+        
+        '''
+        2. get an unencrypted payload from the data server
+        '''
+        payload =  get_student_payload(HOST_data_server, PORT_data_server, 100) # last arg is int value of num of students
+
+
+        '''
+        3. encrypt payload with public keys and send to client
+        '''
+        cipher = encrypt_rsa(payload, n, e)
+        conn.sendall(cipher)
 
 
 if __name__ == '__main__':
     main()
+ 
