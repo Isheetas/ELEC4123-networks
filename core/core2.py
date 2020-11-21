@@ -88,7 +88,7 @@ def main():
     3. Encrypt modified payload with RSA
     '''
     changed_bytes = db.get_bytes()  # convert db to bytes
-    changed_int = int.from_bytes(changed_bytes, byteorder='big')
+    changed_int = bytes_to_int(changed_bytes)
     enc_msg_bytes = encrypt_rsa(changed_int, N_client, e_client)
 
 
@@ -97,7 +97,6 @@ def main():
     '''
     hamm_msg_bin = hamming_encode(enc_msg_bytes)
     hamm_msg_byte = bits_to_bytes(hamm_msg_bin)
-    #print("to send bytes:", hamm_msg_byte, len(hamm_msg_byte))
 
     
     '''
