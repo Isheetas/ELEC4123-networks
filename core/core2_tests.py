@@ -114,14 +114,29 @@ Hamming function testing
 '''
 # no errors
 def hamm_1():
+    data = '1111'
+    encoded = hamming_encode(bits_to_bytes(data))
+    encoded = bits_to_bytes(encoded)
+    decoded = hamming_decode (encoded)
+    assert decoded == data
+    print('test1 Hamming passed')
     pass
 # 1 bit error
-def hamm_2():
-    pass
-# 2 bit error detection, 1 bit fixed
-def hamm_3():
-    pass
 
+def hamm_2():
+    data = '1111'
+    encoded = hamming_encode(bits_to_bytes(data))
+    encoded= list (encoded)
+    if (encoded[3]=='1'):
+        encoded[3] = '0'
+    else:
+        encoded[3] = '1'
+    encoded = ''.join(encoded)
+    encoded = bits_to_bytes(encoded)
+    decoded = hamming_decode (encoded)
+    assert decoded == data
+    print('test2 Hamming passed')
+    pass
 
 '''
 Check payload modification
@@ -129,25 +144,71 @@ Check payload modification
 
 # no m in all student payload
 def marks_check_1():
-    payload = b'dDale \x19\x0b\'\x06QRick \n\x0c2\nRKerri\x0f\x08\'\x04BScott\x11\x08\x15\x075'
+    payload = b'\x03Peter\x16\x0c\x18\x05?John \x18\x0b)\tUJanet\x10\n\x1e\x05='
+    db = create_db(payload) # create DB class
+    db.change_marks()
+    marks_check_bytes(db.get_bytes())
+    print('Marks check1 passed')
     pass
 # m in first students name
 def marks_check_2():
+    payload = b'\x03Meter\x16\x0c\x18\x05?John \x18\x0b)\tUJanet\x10\n\x1e\x05='
+    db = create_db(payload) # create DB class
+    db.change_marks()
+    marks_check_bytes(db.get_bytes())
+    print('Marks check2 passed')
     pass
 # m in last students name
 def marks_check_3():
+    payload = b'\x03Peter\x16\x0c\x18\x05?John \x18\x0b)\tUManet\x10\n\x1e\x05='
+    db = create_db(payload) # create DB class
+    db.change_marks()
+    marks_check_bytes(db.get_bytes())
+    print('Marks check3 passed')
     pass
 # multiple m's in one name
 def marks_check_4():
+    payload = b'\x03Memer\x16\x0c\x18\x05?John \x18\x0b)\tUJanet\x10\n\x1e\x05='
+    db = create_db(payload) # create DB class
+    db.change_marks()
+    marks_check_bytes(db.get_bytes())
+    print('Marks check4 passed')
     pass
 # m in multiple names
 def marks_check_5():
+    payload = b'\x03Meter\x16\x0c\x18\x05?Mohn \x18\x0b)\tUManet\x10\n\x1e\x05='
+    db = create_db(payload) # create DB class
+    db.change_marks()
+    marks_check_bytes(db.get_bytes())
+    print('Marks check5 passed')
     pass
 #  multiple names are the same
 def marks_check_6():
+    payload = b'\x03Meter\x16\x0c\x18\x05?Mohn \x18\x0b)\tUMeter\x10\n\x1e\x05='
+    db = create_db(payload) # create DB class
+    db.change_marks()
+    marks_check_bytes(db.get_bytes())
+    print('Marks check6 passed')
     pass
-# total = t1+t2+t3+t4 with modification
 
+
+# total = t1+t2+t3+t4 with modification
+def marks_check_bytes(msg_bytes):
+    n_entries = msg_bytes[0]
+    len_student_bytes = 10 # bytes taken up by each students information
+    n = 0
+    while n < n_entries:
+        start = n*10 + 1
+        name = str((msg_bytes[start:(start + 5)]), 'utf-8')
+        t1 = msg_bytes[start+5]
+        t2 = msg_bytes[start+6]
+        t3 = msg_bytes[start+7]
+        t4 = msg_bytes[start+8]
+        total = msg_bytes[start+9]
+        assert t1+t2+t3+t4 == total # check that totals correct
+        if "M" in name or "m" in name: assert total == 90 # check if marks changed correctly
+        n += 1
+        
 
 
 def main():
@@ -178,7 +239,7 @@ def main():
 
     hamm_1()
     hamm_2()
-    hamm_3()
+
 
 
     print('----- Hamming tests passed! -----')
