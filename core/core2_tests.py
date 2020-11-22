@@ -59,7 +59,7 @@ RSA function testing
 # max_num_students that can be represented w/ key_size --> = floor((key_size/8 -1) / 10)
 
 # key_size 128 (use sample server)
-def rsa_test(key_size):
+def rsa_test1(key_size):
     N, e, d = set_key(key_size)
     n_students = math.floor( (key_size/8 -1)/10)
     plain = get_student_payload(n_students) 
@@ -70,21 +70,15 @@ def rsa_test(key_size):
     pass
 
 # edge case payload 1 integer less than N, 128bit key (hardcode input)
-def rsa_6():
+def rsa_test2(key_size):
+    N, e, d = set_key(key_size)
+    plain_int = N - 1
+    plain = int_to_bytes(plain_int)
+    cipher = encrypt_rsa(plain_int, N, e)
+    assert len(cipher) <= key_size/8
+    assert plain == decrypt_rsa(bytes_to_int(cipher), N, d)
+    print('RSA ' ,key_size, 'bit largest cipher passed')
     pass
-# edge case payload 1 integer less than N, 256bit key (hardcode input)
-def rsa_7():
-    pass
-# edge case payload 1 integer less than N, 512bit key (hardcode input)
-def rsa_8():
-    pass
-# edge case payload 1 integer less than N, 1024bit key (hardcode input)
-def rsa_9():
-    pass
-# edge case payload 1 integer less than N, 2048bit key (hardcode input)
-def rsa_10():
-    pass
-
 
 
 # helper
@@ -130,30 +124,12 @@ def hamm_3():
 
 
 '''
-Hamming -> RSA encryption -> RSA decryption -> Hamming Decode
-'''
-# key_size 128
-def rsa_hamm_1():
-    pass
-# key_size 256
-def rsa_hamm_2():
-    pass
-# key_size 512
-def rsa_hamm_3():
-    pass
-# key_size 1024
-def rsa_hamm_4():
-    pass
-# key_size 2048
-def rsa_hamm_5():
-    pass
-
-'''
 Check payload modification
 '''
 
 # no m in all student payload
 def marks_check_1():
+    payload = b'dDale \x19\x0b\'\x06QRick \n\x0c2\nRKerri\x0f\x08\'\x04BScott\x11\x08\x15\x075'
     pass
 # m in first students name
 def marks_check_2():
@@ -186,11 +162,16 @@ def main():
 
     print('-----RSA key test passed!  -----')
 
-    rsa_test(128)
-    rsa_test(256)
-    rsa_test(512)
-    rsa_test(1024)
-    rsa_test(2048)
+    rsa_test1(128)
+    rsa_test1(256)
+    rsa_test1(512)
+    rsa_test1(1024)
+    rsa_test1(2048)
+    rsa_test2(128)
+    rsa_test2(256)
+    rsa_test2(512)
+    rsa_test2(1024)
+    rsa_test2(2048)
 
 
     print('-----  RSA tests passed!  -----')
@@ -202,15 +183,6 @@ def main():
 
     print('----- Hamming tests passed! -----')
 
-
-    rsa_hamm_1()
-    rsa_hamm_2()
-    rsa_hamm_3()
-    rsa_hamm_4()
-    rsa_hamm_5()
-
-
-    print('----- Hamming+RSA tests passed! -----')
 
     marks_check_1()
     marks_check_2()
