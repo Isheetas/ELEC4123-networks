@@ -3,8 +3,7 @@ import select
 import json
 import struct
 from type_conversions import *
-from rsa import *
-from hamming import *
+
 import statistics
 
 def get_data_from_db(host, port, N, e, d):
@@ -100,15 +99,16 @@ class Database:
     def add_total(self, total):
         self.total.append(total)
 
-    def as_dict(self):
-        student_dict = list()
-        for student in self.sample:
-            student_dict.append(student.as_dict())
+    def get_stu(self, i):
+        ret = list()
+        ret.append(self.name[i])
+        ret.append(self.task1[i])
+        ret.append(self.task2[i])
+        ret.append(self.task3[i])
+        ret.append(self.task4[i])
+        ret.append(self.total[i])
+        return ret
 
-        return {
-            "n_entries": self.n_entries,
-            "sample": student_dict,
-        }
 
     def change_marks(self):
         # order in ascending order of totals
@@ -128,8 +128,9 @@ class Database:
 
     def get_marks_to_change(self):
         i = 0
+
         for stu_name in self.name:
-            if "m" in stu_name:
+            if "m" in stu_name or "M" in stu_name:
                 return i
             i += 1
         return 0
