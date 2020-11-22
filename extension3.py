@@ -76,24 +76,37 @@ def main():
     mean_orig = db.get_mean()
     print("bef mean:", mean_orig)
 
+    print("name:", db.get_name())
 
-    diff = [abs(x-90) for x in marks]
-    index = diff.index(min(diff))
+    to_change = db.get_marks_to_change()            #index of marks that need to be changed
+    print("to_change:", to_change)
 
-    to_change = db.get_marks_to_change()
-    buff = marks[to_change]
-    marks[to_change] = marks[index]
-    marks[index] = buff
-    diff = 90-marks[to_change]
-    marks[to_change] = 90
-    distance = marks[to_change] - diff - mean_orig
-    obtainmark = round(mean_orig - distance)
-    diff2 = [abs(x - obtainmark) for x in marks]
+    swap_i = db.get_closest()
+    print("swap_i:", swap_i)
 
-    i = diff2.index(min(diff2))
-    marks[i] = marks[i] + diff
+    if swap_i is not to_change:
+        print("swap and to change not same")
+        buff = marks[to_change]
+        marks[to_change] = marks[swap_i]
+        
+        marks[swap_i] = buff
+        diff = 90-marks[to_change]
+        
+        marks[to_change] = 90
+        distance = marks[to_change] - diff - mean_orig
+        obtainmark = round(mean_orig - distance)
+        diff2 = [abs(x - obtainmark) for x in marks]
+
+        i = diff2.index(min(diff2))
+        marks[i] = marks[i] + diff
 
     print("after marks:", marks)
+    db.set_total_marks(marks)
+
+    std_orig = db.get_stdev()
+    print("after std:", std_orig)
+    mean_orig = db.get_mean()
+    print("after mean:", mean_orig)
 
 
 
@@ -103,11 +116,6 @@ def main():
     #print('after: ', db.json())
 
     db.print()
-
-    std = db.get_stdev()
-    print("after std:", std)
-    mean = db.get_mean()
-    print("after mean:", mean)
 
     '''
     modify code
