@@ -5,6 +5,11 @@ from hamming_ext1 import *
 from bitstring import BitArray
 from type_conversions import *
 
+
+
+
+
+
 def main():
     #CREATE SERVER
     HOST = '127.0.0.1'
@@ -25,39 +30,23 @@ def main():
         clientmsg = str(conn.recv(1024))
         clientmsg = clientmsg[2:len(clientmsg)-1]
 
-        print("cli msg:", clientmsg)
+        #print("cli msg:", clientmsg)
 
         if (clientmsg == "request"):
             #CONNECT TO DATA SERVER
-            content = '4,3'
-            request_bytes =  bytes(content, 'utf-8')
-
-            try:
-                s_data = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                print ("Socket successfully created to data server")
-            except socket.error as err:
-                print ("socket creation failed with error %s to data server" %(err))
-
-            s_data.connect((HOST_server, PORT_d))
-            s_data.send (request_bytes)
-
-            s_data.send (request_bytes)
-            ready = select.select([s_data], [], [], 10)
-            if ready[0]:
-                response = s_data.recv(64000)
-
-            s_data.close()
+            n_students = 4
+            response = get_student_payload(HOST_server, PORT_d, n_students)
 
             #convert data into bits
             #response = b'\x01Kevin\x0c\t\x14\x05.'
             data = bytes_to_bits(response)
-            print("response from data server: ", response)
+            #print("response from data server: ", response)
 
 
             # split data bits into blocks of 4 so it can be encoded
             n = 4
             splitresponse = [data[i:i + n] for i in range(0, len(data), n)]
-            print("splitresponse:", splitresponse)
+            #print("splitresponse:", splitresponse)
 
             hammingsplit = []
             for x in splitresponse:
@@ -88,14 +77,14 @@ def main():
 
             s_noise.close()
 
-            print("noiseResponse:", bytes_to_bits(noiseResponse))
+            #print("noiseResponse:", bytes_to_bits(noiseResponse))
 
             #send noisy payload to client
             conn.sendall(noiseResponse)
         elif clientmsg == "resend":
-            print("IN RESEND")
+            #print("IN RESEND")
             #send encoded through noise server
-            print("response:", response)
+            #print("response:", response)
             try:
                 s_noise = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 print("Socket successfully created to noise server")
@@ -113,22 +102,39 @@ def main():
             conn.sendall(noiseResponse)
             s_noise.close()
 
-
-        
-
+# cd Desktop\networks_proj\ext_1>        
 
 
-        
 
-        # RESEND CODE: LISTEN FOR "resend" CLIENT MESSAGE RERUN encoded THROUGH NOISE SERVER
-        #print("")
-        #s.listen(1)
-        #conn, addr = s.accept()
-        #print(f"Connection from {addr} has been established.")
-        #clientmsg = conn.recv(1024)
-        #print(clientmsg)
-        #if clientmsg == b'resend':
-            
+def get_student_payload(HOST_server, PORT_d, n_students):
+        #Request message from data server
+    content = '4,' + str(n_students) 
+    request_bytes =  bytes(content, 'utf-8')
+
+    try:
+        s_data = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        print ("Socket successfully created to data server")
+    except socket.error as err:
+        print ("socket creation failed with error %s to data server" %(err))
+
+    s_data.connect((HOST_server, PORT_d))
+    s_data.send (request_bytes)
+
+    #s.send (request_bytes)
+    ready = select.select([s_data], [], [], 10)
+    if ready[0]:
+        response = s_data.recv(64000)
+
+    s_data.close()
+
+    print(response)
+    return response
+
+
+
+
+
+
 
 if __name__ == '__main__':
     main()
