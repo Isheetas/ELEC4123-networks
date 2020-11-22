@@ -36,7 +36,7 @@ def main():
         response = s_client.recv(64000)
         #print('request from arash client: ', response) 
 
-    #s_client.close
+    s_client.close
 
 
     '''
@@ -103,8 +103,22 @@ def main():
     5. Send response to Arash's client
     '''
     response_bytes = header + hamm_msg_byte # form request message
-    s_client.send (response_bytes)
-    s_client.close
+
+    # add in 5. if needed
+        #print(response_bytes)
+    try: 
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
+        print ("Socket successfully created")
+    except socket.error as err: 
+        print ("socket creation failed with error %s" %(err))
+    
+    
+    s.connect((HOST, PORT_client))
+    s.send (response_bytes)
+    s.close()
+
+    #s_client.send (response_bytes)
+    #s_client.close
 
 
 
