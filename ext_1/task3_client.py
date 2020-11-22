@@ -91,9 +91,10 @@ def main():
     if "resend" not in final:
         bin = "".join(final)
         print("msg:", bits_to_bytes(bin))
+        #ascii
 
     else:
-        print("resend in both")
+        print("Cant decode too many error")
     s.close()
     
 
