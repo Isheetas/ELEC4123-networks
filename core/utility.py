@@ -153,7 +153,7 @@ class Database:
     def change_marks(self):
         # change marks for all students w/ m in name:
         for student in self.sample:
-            if "m" in student.get_name(): student.change_marks(90)
+            if "m" in student.get_name() or "M" in student.get_name(): student.change_marks(90)
         # stu = self.sample[0]
         # stu.change_marks()
 
