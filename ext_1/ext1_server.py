@@ -34,7 +34,7 @@ def main():
 
         if (clientmsg == "request"):
             #CONNECT TO DATA SERVER
-            n_students = 4
+            n_students = 10
             response = get_student_payload(HOST_server, PORT_d, n_students)
 
             #convert data into bits
