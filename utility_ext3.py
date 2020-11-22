@@ -3,8 +3,7 @@ import select
 import json
 import struct
 from type_conversions import *
-from rsa import *
-from hamming import *
+
 import statistics
 
 def get_data_from_db(host, port, N, e, d):
@@ -50,18 +49,22 @@ def create_db(msg_bytes):
         t3 = msg_bytes[start+7]
         t4 = msg_bytes[start+8]
         total = msg_bytes[start+9]
-        db.add_student(Student(name, t1, t2, t3, t4, total))
-        #print('name:', name, end = ' ')
-        #print('t1:',  t1, end = ' ')
-        #print('t2:', t2, end = ' ')
-        #print('t3:', t3, end = ' ')
-        #print('t4:', t4, end = ' ')
-        #print('total:', total)
+        db.add_name(name)
+        db.add_task1(t1)
+        db.add_task2(t2)
+        db.add_task3(t3)
+        db.add_task4(t4)
+        db.add_total(total)
+
+        print('name:', name, end = ' ')
+        print('t1:',  t1, end = ' ')
+        print('t2:', t2, end = ' ')
+        print('t3:', t3, end = ' ')
+        print('t4:', t4, end = ' ')
+        print('total:', total)
         # next five bytes form name
 
         n += 1
-
-        
     return db
 
 
@@ -75,20 +78,37 @@ class Database:
     def __init__(self):
         self.n_entries = 0
         self.sample = list()
+        self.name = list()
+        self.task1 = list()
+        self.task2 = list()
+        self.task3 = list()
+        self.task4 = list()
+        self.total = list()
 
-    def add_student(self, student):
-        self.sample.append(student)
+    def add_name(self, name):
+        self.name.append(str(name))
         self.n_entries += 1
+    def add_task1(self, t1):
+        self.task1.append(t1)
+    def add_task2(self, t2):
+        self.task2.append(t2)
+    def add_task3(self, t3):
+        self.task3.append(t3)
+    def add_task4(self, t4):
+        self.task4.append(t4)
+    def add_total(self, total):
+        self.total.append(total)
 
-    def as_dict(self):
-        student_dict = list()
-        for student in self.sample:
-            student_dict.append(student.as_dict())
+    def get_stu(self, i):
+        ret = list()
+        ret.append(self.name[i])
+        ret.append(self.task1[i])
+        ret.append(self.task2[i])
+        ret.append(self.task3[i])
+        ret.append(self.task4[i])
+        ret.append(self.total[i])
+        return ret
 
-        return {
-            "n_entries": self.n_entries,
-            "sample": student_dict,
-        }
 
     def change_marks(self):
         # order in ascending order of totals
@@ -108,8 +128,9 @@ class Database:
 
     def get_marks_to_change(self):
         i = 0
-        for student in self.sample:
-            if "m" in student.get_name(): 
+
+        for stu_name in self.name:
+            if "m" in stu_name or "M" in stu_name:
                 return i
             i += 1
         return 0
@@ -150,76 +171,42 @@ class Database:
         return msg_byte
 
     def get_stdev(self):
-        total_marks = []
-        for stu in self.sample:
-            total_marks.append(stu.mark_total)
-        return statistics.stdev(total_marks)
+        return statistics.stdev(self.total)
     
     def get_mean(self):
-        total_marks = []
-        for stu in self.sample:
-            total_marks.append(stu.mark_total)
-        return statistics.mean(total_marks)
+        return statistics.mean(self.total)
 
+    def get_name(self):
+        return self.name
     def get_total_marks(self):
-        total_marks = []
-        for stu in self.sample:
-            total_marks.append(stu.mark_total)
-        return total_marks
+        return self.total
+    
+    def set_total_marks(self, total):
+        self.total = total
+    
+    def get_task1(self):
+        return self.task1
+
+    def get_task2(self):
+        return self.task2
+
+    def get_task3(self):
+        return self.task3
+        
+    def get_task4(self):
+        return self.task4
+
+    def get_closest(self):
+
+        #if the person with m is closest to 90 - than dont swap
+
+        diff = [abs(x-90) for x in self.total]
+        index = diff.index(min(diff))
+        return index
         
 
 
-class Student:
-    def __init__(self, name, t1, t2, t3, t4, mark_total):
-        self.name= str(name)
-        self.t1 = int(t1)
-        self.t2 = int(t2)
-        self.t3 = int(t3)
-        self.t4 = int(t4)
-        self.total = int(mark_total) 
-    
-    def get_name(self):
-        return str(self.name)
 
-    def as_dict(self):
-        return {
-            "name": self.name,
-            "t1": self.t1,
-            "t2": self.t2,
-            "t3": self.t3,
-            "t4": self.t4,
-            "mark_total": self.total
-        }
-
-    
-    def change_marks(self, new_total):
-        print("name change:")
-        self.total = new_total
-        # weighted distribution of new marks between 4 tasks
-
-        # max 25
-        self.t1 = self.t1*int(0.25*new_total)
-        # max 15
-        self.t2 = self.t2*int(0.15*new_total)
-        # max 10
-        self.t4 = self.t4*int(0.1*new_total)
-        # max 50
-        self.t3 = new_total = self.t1 - self.t2 - self.t4
-
-
-
-    def string(self):
-        ret = bytes(self.name) + bytes(self.t1) + bytes(self.t2) \
-                + bytes(self.t3) + bytes(self.t4) + bytes(self.t3)
-        return ret
-    
-    def print(self):
-        print("name:", str(self.name), end = ' ')
-        print("t1:", self.t1, end = ' ')
-        print("t2:", self.t2, end = ' ')
-        print("t3:", self.t3, end = ' ')
-        print("t4:", self.t4, end = ' ')
-        print("total:", self.total)
         
 
 

@@ -41,7 +41,7 @@ def main():
     # 1. Send well-formed HTTP requests
     HOST = '149.171.36.192'
     PORT = 12000
-    content = '4,5'
+    content = '4,10'
  
     # HTTP request headers
     #request = 'GET / HTTP/1.1\r\nHost: ' + HOST + '\r\nContent-Length: ' + str(len(content)) + '\r\n\r\n' + content
@@ -76,16 +76,50 @@ def main():
     mean_orig = db.get_mean()
     print("bef mean:", mean_orig)
 
+    print("name:", db.get_name())
 
-    diff = [abs(x-90) for x in marks]
-    index = diff.index(min(diff))
+    to_change = db.get_marks_to_change()            #index of marks that need to be changed
+    print("to_change:", to_change)
 
-    to_change = db.get_marks_to_change()
+    swap_i = db.get_closest()
+    print("swap_i:", swap_i)
+    
     buff = marks[to_change]
-    marks[to_change] = marks[index]
-    marks[index] = buff
-    diff = 90-marks[to_change]
-    marks[to_change] = 90
+    if swap_i is not to_change:
+        print("swap and to change not same")
+        marks[to_change] = marks[swap_i]
+        
+        marks[swap_i] = buff
+        diff = 90-marks[to_change]
+        
+        marks[to_change] = 90
+    else:
+        marks[to_change] = 90
+
+
+    #ADJUST TASK MARKS
+    diff_after_change = marks[to_change] - buff
+    single = round(diff_after_change//4)
+    rem = diff_after_change - 4*single
+    print("round,rem", round,rem)
+    tup = [db.task1[to_change], db.task2[to_change], db.task3[to_change], db.task4[to_change]]
+    max_i = tup.index(max(tup))
+    min_i = tup.index(min(tup))
+    if tup[max_i] + single < 100:
+        db.task1[to_change] += single
+        db.task2[to_change] += single
+        db.task3[to_change] += single
+        db.task4[to_change] += single + rem
+    
+    print("changed:", db.get_stu(to_change))
+    
+
+
+
+    
+
+
+
     distance = marks[to_change] - diff - mean_orig
     obtainmark = round(mean_orig - distance)
     diff2 = [abs(x - obtainmark) for x in marks]
@@ -93,7 +127,14 @@ def main():
     i = diff2.index(min(diff2))
     marks[i] = marks[i] + diff
 
+
     print("after marks:", marks)
+    db.set_total_marks(marks)
+
+    std_orig = db.get_stdev()
+    print("after std:", std_orig)
+    mean_orig = db.get_mean()
+    print("after mean:", mean_orig)
 
 
 
@@ -103,11 +144,6 @@ def main():
     #print('after: ', db.json())
 
     db.print()
-
-    std = db.get_stdev()
-    print("after std:", std)
-    mean = db.get_mean()
-    print("after mean:", mean)
 
     '''
     modify code
