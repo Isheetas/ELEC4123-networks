@@ -14,7 +14,7 @@ def hamming_decode (input):
     # caluclate number of parity bits
 
     input = bytes_to_bits(input)
-    input = input[2:]
+    #input = input[2:]
 
     n = len(input)
 
@@ -100,7 +100,7 @@ def hamming_encode(msg_byte):
 
     data = msg_bin[2:]
 
-    print("before encoding:", int(data,2), len(data))
+    #print("before encoding:", int(data,2), len(data))
     #print("before:", int(data,2))
 
     data = data[::-1]
